@@ -8,9 +8,9 @@ public class PlayerMovement : MonoBehaviour
 {
     public Camera playerCamera;
     public float slowWalkSpeed = 4f;
-    public float normalWalkSpeed = 10f;
-    private float currentSpeedMode = 10f;
-    private float adjustedSpeed = 10f;
+    public float normalWalkSpeed = 9f;
+    private float currentSpeedMode = 9f;
+    private float adjustedSpeed = 9f;
     public float jumpPower = 7f;
     public float gravity = 10f;
     public float lookSpeed = 2f;
@@ -70,7 +70,6 @@ public class PlayerMovement : MonoBehaviour
         float curSpeedX = canMove ? adjustedSpeed * Input.GetAxis("Vertical") : 0;
         float curSpeedY = canMove ? adjustedSpeed * Input.GetAxis("Horizontal") : 0;
 
-        Debug.Log(curSpeedX + "/" + adjustedSpeed);
 
         float movementDirectionY = moveDirection.y;
         moveDirection = (forward * curSpeedX) + (right * curSpeedY);
@@ -106,7 +105,7 @@ public class PlayerMovement : MonoBehaviour
         {
             characterController.height = defaultHeight;
             slowWalkSpeed = 4f;
-            normalWalkSpeed = 10f;
+            normalWalkSpeed = 9f;
         }
 
         characterController.Move(moveDirection * Time.deltaTime);
