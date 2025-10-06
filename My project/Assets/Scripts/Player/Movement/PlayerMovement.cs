@@ -7,18 +7,18 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public Camera playerCamera;
-    public float slowWalkSpeed = 4f;
-    public float normalWalkSpeed = 9f;
-    private float currentSpeedMode = 9f;
-    private float adjustedSpeed = 9f;
+    public float slowWalkSpeed = 2f;
+    public float normalWalkSpeed = 6f;
+    private float currentSpeedMode = 6f;
+    private float adjustedSpeed = 6f;
     public float jumpPower = 7f;
     public float gravity = 10f;
     public float lookSpeed = 2f;
     public float lookXLimit = 45f;
     public float defaultHeight = 2f;
     public float crouchHeight = 1f;
-    public float crouchSpeed = 3f;
-    public float slowestSpeed = 1f;
+    public float crouchSpeed = 1f;
+    public float slowestSpeed = 0.5f;
     private bool jumped = false;
     private bool jumpSlow= false;
 
@@ -105,7 +105,7 @@ public class PlayerMovement : MonoBehaviour
         {
             characterController.height = defaultHeight;
             slowWalkSpeed = 4f;
-            normalWalkSpeed = 9f;
+            normalWalkSpeed = 6f;
         }
 
         characterController.Move(moveDirection * Time.deltaTime);
