@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
@@ -11,6 +12,7 @@ public class PlayerMovement : MonoBehaviour
     public float normalWalkSpeed = 6f;
     private float currentSpeedMode = 6f;
     private float adjustedSpeed = 6f;
+    public float normalizedSpeed;
     public float jumpPower = 7f;
     public float gravity = 10f;
     public float lookSpeed = 2f;
@@ -20,7 +22,7 @@ public class PlayerMovement : MonoBehaviour
     public float crouchSpeed = 1f;
     public float slowestSpeed = 0.5f;
     private bool jumped = false;
-    private bool jumpSlow= false;
+    private bool jumpSlow = false;
 
     private Vector3 moveDirection = Vector3.zero;
     private float rotationX = 0;
@@ -29,6 +31,7 @@ public class PlayerMovement : MonoBehaviour
     private bool canMove = true;
 
     private Coroutine jumpSlowCoroutine;
+    private Coroutine moveCameraOnJumpCoroutine;
 
     void Start()
     {
@@ -48,35 +51,46 @@ public class PlayerMovement : MonoBehaviour
         if (characterController.isGrounded)
         {
 
-            currentSpeedMode = isSlowWalking ||jumpSlow ? slowWalkSpeed : normalWalkSpeed;  //make sure its not changed mid air
+            currentSpeedMode = isSlowWalking || jumpSlow ? slowWalkSpeed : normalWalkSpeed;  //make sure its not changed mid air
             if (jumped)
             {
                 jumped = false;
                 jumpSlow = true;
-                
+
                 if (jumpSlowCoroutine != null)
                 {
                     StopCoroutine(jumpSlowCoroutine);
                 }
-                jumpSlowCoroutine= StartCoroutine(ResetJumpSlow());
+                jumpSlowCoroutine = StartCoroutine(ResetJumpSlow());
                 adjustedSpeed = Mathf.Max(adjustedSpeed * 0.75f, slowWalkSpeed);
             }
 
             adjustedSpeed = AccelerateTowards(adjustedSpeed, currentSpeedMode, 20f);
-    
+
+
+        }
+        float inputX = canMove ? Input.GetAxis("Vertical") : 0;
+        float inputY = canMove ? Input.GetAxis("Horizontal") : 0;
+
+        Vector3 move = (forward * inputX) + (right * inputY);
+
+        if (move.magnitude > 1f)
+        {
+            move.Normalize();
+            normalizedSpeed = move.magnitude;
 
         }
 
-        float curSpeedX = canMove ? adjustedSpeed * Input.GetAxis("Vertical") : 0;
-        float curSpeedY = canMove ? adjustedSpeed * Input.GetAxis("Horizontal") : 0;
 
 
         float movementDirectionY = moveDirection.y;
-        moveDirection = (forward * curSpeedX) + (right * curSpeedY);
+        moveDirection = move * adjustedSpeed;
+
+
 
         if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
         {
-
+            if (moveCameraOnJumpCoroutine == null) StartCoroutine(MoveCameraOnJump());
             jumped = true;
             moveDirection.y = jumpPower;
         }
@@ -117,6 +131,17 @@ public class PlayerMovement : MonoBehaviour
             playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
             transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * lookSpeed, 0);
         }
+
+        GetNormalizedSpeed();
+
+    }
+
+    private void GetNormalizedSpeed()
+    {
+        if (characterController.isGrounded)
+            normalizedSpeed = Mathf.InverseLerp(0, adjustedSpeed, Mathf.Clamp(characterController.velocity.magnitude, 0, adjustedSpeed));
+        else
+            normalizedSpeed = 0f;
     }
 
     float AccelerateTowards(float current, float target, float accelRate)
@@ -128,6 +153,14 @@ public class PlayerMovement : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
         jumpSlow = false;
+    }
+
+    private IEnumerator MoveCameraOnJump()
+    {
+        //Handle camera jump logic here
+        yield return null;
+        moveCameraOnJumpCoroutine=null;
+
     }
 
 }
