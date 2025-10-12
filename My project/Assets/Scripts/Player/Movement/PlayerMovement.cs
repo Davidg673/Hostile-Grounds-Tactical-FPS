@@ -8,13 +8,13 @@ using UnityEngine.Events;
 public class PlayerMovement : MonoBehaviour
 {
     public Camera playerCamera;
-    public float slowWalkSpeed = 2f;
-    public float normalWalkSpeed = 6f;
-    private float currentSpeedMode = 6f;
-    private float adjustedSpeed = 6f;
+    public float slowWalkSpeed;
+    public float normalWalkSpeed;
+    private float currentSpeedMode;
+    private float adjustedSpeed;
     public float normalizedSpeed;
-    public float jumpPower = 7f;
-    public float gravity = 10f;
+    public float jumpPower;
+    public float gravity;
     public float lookSpeed = 2f;
     public float lookXLimit = 45f;
     public float defaultHeight = 2f;
@@ -22,7 +22,7 @@ public class PlayerMovement : MonoBehaviour
     public float crouchSpeed = 1f;
     public float slowestSpeed = 0.5f;
     private bool jumped = false;
-    private bool jumpSlow = false;
+    private bool jumpSlow = false; //slow down character when landing
 
     private Vector3 moveDirection = Vector3.zero;
     private float rotationX = 0;
@@ -32,37 +32,43 @@ public class PlayerMovement : MonoBehaviour
 
     private Coroutine jumpSlowCoroutine;
     private Coroutine moveCameraOnJumpCoroutine;
+    public bool isCrouched;
+    public bool isSlowWalking;
+
 
     void Start()
     {
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        currentSpeedMode = normalWalkSpeed;
+        adjustedSpeed = normalWalkSpeed;
     }
 
     void Update()
-    {
+    {   
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
 
-        bool isSlowWalking = Input.GetKey(KeyCode.LeftShift);
+        isSlowWalking = Input.GetKey(KeyCode.LeftShift);
+        bool isSuperSlowWalking = Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.LeftControl);
 
-
-        if (characterController.isGrounded)
+        if (characterController.isGrounded) //make sure speed is not changed mid air
         {
 
-            currentSpeedMode = isSlowWalking || jumpSlow ? slowWalkSpeed : normalWalkSpeed;  //make sure its not changed mid air
-            if (jumped)
+            currentSpeedMode = isSlowWalking || jumpSlow ? slowWalkSpeed : normalWalkSpeed;  //slow down character based on Shift pressed or landing
+            currentSpeedMode = isSuperSlowWalking ? slowestSpeed : currentSpeedMode; // if both control and shift are pressed, choose slowest speed
+            currentSpeedMode = Input.GetKey(KeyCode.LeftControl) ? crouchSpeed : currentSpeedMode; 
+
+            if (jumped) //if landed from a jump
             {
                 jumped = false;
                 jumpSlow = true;
 
-                if (jumpSlowCoroutine != null)
-                {
-                    StopCoroutine(jumpSlowCoroutine);
-                }
+                if (jumpSlowCoroutine != null) StopCoroutine(jumpSlowCoroutine);
+
                 jumpSlowCoroutine = StartCoroutine(ResetJumpSlow());
-                adjustedSpeed = Mathf.Max(adjustedSpeed * 0.75f, slowWalkSpeed);
+                adjustedSpeed = Mathf.Max(adjustedSpeed * 0.75f, slowWalkSpeed);  //returns largest of two so speed does not go below slow walk speed
             }
 
             adjustedSpeed = AccelerateTowards(adjustedSpeed, currentSpeedMode, 20f);
@@ -106,20 +112,15 @@ public class PlayerMovement : MonoBehaviour
 
         if (Input.GetKey(KeyCode.LeftControl) && canMove)
         {
+            isCrouched = true;
             characterController.height = crouchHeight;
-
-            if (characterController.isGrounded)
-            {
-                slowWalkSpeed = slowestSpeed;
-                normalWalkSpeed = crouchSpeed;
-            }
+            //TODO: Smoothing to be added
 
         }
         else
         {
+            isCrouched = false;
             characterController.height = defaultHeight;
-            slowWalkSpeed = 4f;
-            normalWalkSpeed = 6f;
         }
 
         characterController.Move(moveDirection * Time.deltaTime);
@@ -138,7 +139,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void GetNormalizedSpeed()
     {
-        if (characterController.isGrounded)
+        if (characterController.isGrounded && !isCrouched && !isSlowWalking)
             normalizedSpeed = Mathf.InverseLerp(0, adjustedSpeed, Mathf.Clamp(characterController.velocity.magnitude, 0, adjustedSpeed));
         else
             normalizedSpeed = 0f;
@@ -159,8 +160,9 @@ public class PlayerMovement : MonoBehaviour
     {
         //Handle camera jump logic here
         yield return null;
-        moveCameraOnJumpCoroutine=null;
+        moveCameraOnJumpCoroutine = null;
 
     }
+
 
 }

@@ -1,23 +1,25 @@
 using System.Collections;
-using Unity.VisualScripting;
+using Unity.Cinemachine;
+using UnityEditor.EditorTools;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class WeaponLogic : MonoBehaviour
 {
     [Header("Refferences")]
-    private ParticleSystem muzzleParticleSystem;
-    private AudioSource sfxSource;
-    private Light muzzleFlashLight;
     public Transform visualShootSource;
     private WeaponHandler weaponHandler;
     private Transform raycastShootSource;
     private Animator animator;
     private PlayerMovement playerMovement;
     private Camera mainCam;
+    private CameraRecoil cameraScript;
+    private DynamicCrosshair crosshairScript;
+    private GameObject crosshairObject;
 
     [Header("Settings")]
     [SerializeField] private FireMode fireMode;
-    private float deployTime = 0.3f;
+    [SerializeField] private float deployTime;
 
     [Tooltip("Rate of fire in rounds per minute/ includes semi auto/ excludes bolt action")]
     [SerializeField] private float fireRate = 600;
@@ -49,10 +51,6 @@ public class WeaponLogic : MonoBehaviour
     [SerializeField] private int magCapacity = 30;
     [SerializeField] private int maxBulletsAllowed = 120;
 
-    [SerializeField] private AudioClip shootClip;
-    [SerializeField] private AudioClip emptyShootClip;
-    [SerializeField] private AudioClip[] reloadSequenceSFXs;
-
     private float fireInterval => 60f / fireRate;
 
     [SerializeField]private int currentBulletsInMag;
@@ -81,13 +79,86 @@ public class WeaponLogic : MonoBehaviour
     private Quaternion startRot;
     [SerializeField] private float kickbackOffsetAllowed;
     [SerializeField] private float kickbackOffset;
-    private Vector3 kickbackLimit;
-    [SerializeField] private float recoilRecoveryTime;
-    [SerializeField] private float kickbackSmoothing;
-    private Vector3 recoilTargetPos;
 
+    [SerializeField] private float verticalRecoilAllowed;
+    [SerializeField] private float verticalRecoil;
+
+    [SerializeField] private float horizontalRecoilAllowed;
+    [SerializeField] private float horizontalRecoil;
+
+
+    [Tooltip("How smooth the weapon comes back from recoil")]
+    [SerializeField] private float kickbackRecoveryTime;
+
+    [Tooltip("How smooth the recoil happens")]
+    [SerializeField] private float kickbackSmoothing;
+
+    [Tooltip("How fast vertical Recoil recovers")]
+    [SerializeField] private float verticalRecoilRecoveryTime;
+
+    [Tooltip("How fast vertical Recoil happens")]
+    [SerializeField] private float verticalRecoilSmoothing;
+
+    private Vector3 recoilTargetPos;
+    private Quaternion recoilTargetRot;
     private Vector3 recoilVelocityRef;
     private bool weaponShot;
+    [SerializeField] float crosshairSpread;
+
+    [Tooltip("How far the bullet moves up")]
+    [SerializeField] float verticalBulletRecoil;
+
+    [Tooltip("How far the bullet moves sideways")]
+    [SerializeField] float horizontalBulletSpread;
+    private float currentVerticalBulletRecoil;
+    private float currentHorizontalBulletSpread;
+
+    [Tooltip("Bullet recoil boundary")]
+    [SerializeField] float verticalBulletMax;
+
+    [Tooltip("Bullet sway boundary")]
+    [SerializeField] float horizontalBulletMax;
+
+
+    [Tooltip("Bullet recoil/sway return speed")]
+    [SerializeField] float directionReturnSpeed;
+
+    [Tooltip("how much to reduce/increase the effect of recoil by")]
+    [Range(0, 5)]
+    [SerializeField] private float recoilControl;
+
+    [Tooltip("how much to reduce/increase the effect of sway by")]
+    [Range(0, 5)]
+
+    [SerializeField] private float spreadControl;
+    [Range(0, 5)]
+    [SerializeField] private float cameraRecoilMult;
+
+    [Range(0, 5)]
+    [SerializeField] private float cameraSpreadMult;
+    private float spreadControlStatic;
+    private float recoilControlStatic;
+
+
+    private float currentRecoilControl; //used to change value runtime
+    private float currentSpreadControl;
+    
+
+    Vector3 direction;
+    Vector3 originalDirection;
+    
+
+    [Header("SFX/VFX")]
+    private ParticleSystem muzzleParticleSystem;
+    private AudioSource sfxSource;
+    private Light muzzleFlashLight;
+    [SerializeField] private AudioClip shootClip;
+    [SerializeField] private AudioClip emptyShootClip;
+    [SerializeField] private AudioClip[] reloadSequenceSFXs;
+    [SerializeField] private GameObject[] bulletHoleArr;
+
+
+
 
     public enum FireMode
     {
@@ -114,6 +185,10 @@ public class WeaponLogic : MonoBehaviour
             }
         }
 
+
+        currentRecoilControl = recoilControl;
+        currentSpreadControl = spreadControl; //neccessary for bullet recoil
+
         RecoverRecoil();
         PassPlayerSpeedToAnimator(); 
     }
@@ -126,28 +201,53 @@ public class WeaponLogic : MonoBehaviour
     private void PassPlayerSpeedToAnimator()
     {
         currPlayerSpeed = Mathf.SmoothDamp(currPlayerSpeed, playerMovement.normalizedSpeed, ref refVel, 0.15f);
+        if (playerMovement.normalizedSpeed > 0.1f)
+        {
+            recoilControl = recoilControlStatic * 1.5f;
+            spreadControl = spreadControlStatic * 1.5f;
+        }
+        else
+        {
+            recoilControl = recoilControlStatic;
+            spreadControl = spreadControlStatic;
+        }
+
         animator.SetFloat("PlayerSpeed", currPlayerSpeed);
     }
-
 
     private void RecoverRecoil()
     {
         if (weaponShot)
         {
-        transform.localPosition = Vector3.SmoothDamp(
-            transform.localPosition,
-            recoilTargetPos,
-            ref recoilVelocityRef,
-            kickbackSmoothing
-        );
+            //add kickback recoil
+            transform.localPosition = Vector3.SmoothDamp(
+                transform.localPosition,
+                recoilTargetPos,
+                ref recoilVelocityRef,
+                kickbackSmoothing
+            );
+            
+            //add horizontal and vertical recoil
+            transform.localRotation = Quaternion.Slerp(transform.localRotation, recoilTargetRot, verticalRecoilSmoothing);
 
+            //return kickback recoil
             recoilTargetPos = Vector3.MoveTowards(
-               recoilTargetPos,
-               startPos,
-               recoilRecoveryTime * Time.deltaTime
-        );
+                recoilTargetPos,
+                startPos,
+                kickbackRecoveryTime * Time.deltaTime
+            );
+            //return horizontal and vertical recoil
+            recoilTargetRot = Quaternion.RotateTowards(recoilTargetRot, startRot, verticalRecoilRecoveryTime * Time.deltaTime);
+
+            //return bullet recoil
+            originalDirection = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)).direction;
+
+            currentHorizontalBulletSpread = Mathf.MoveTowards(currentHorizontalBulletSpread, 0f, directionReturnSpeed * Time.deltaTime);
+            currentVerticalBulletRecoil = Mathf.MoveTowards(currentVerticalBulletRecoil, 0f, directionReturnSpeed * Time.deltaTime);
+            
+            direction = originalDirection + new Vector3(currentHorizontalBulletSpread,currentVerticalBulletRecoil,0f);
+
         }
-            //transform.localPosition = Vector3.SmoothDamp(transform.localPosition, startPos, ref recoilVelocityRef, recoilRecoveryTime);
     }
 
     private void AddRecoil()
@@ -160,16 +260,37 @@ public class WeaponLogic : MonoBehaviour
         }
 
 
-        
-        Vector3 localOffset = transform.localPosition+new Vector3(0f, 0f, -kickbackOffset) - startPos;
+        //Offset with rotation
+        Vector3 localOffset = transform.localPosition + new Vector3(0f, 0f, -kickbackOffset) - startPos;
 
+        //clamp offset
         localOffset = new Vector3(
-            Mathf.Clamp(localOffset.x, -kickbackLimit.x, kickbackLimit.x),
-            Mathf.Clamp(localOffset.y, -kickbackLimit.y, kickbackLimit.y),
-            Mathf.Clamp(localOffset.z, -kickbackLimit.z, kickbackLimit.z)
+            Mathf.Clamp(localOffset.x, -kickbackOffsetAllowed, kickbackOffsetAllowed),
+            Mathf.Clamp(localOffset.y, -verticalRecoilAllowed, verticalRecoilAllowed),
+            Mathf.Clamp(localOffset.z, -kickbackOffsetAllowed, kickbackOffsetAllowed)
         );
+       
+        recoilTargetPos = localOffset + startPos;
 
-        recoilTargetPos=localOffset+ startPos;
+        //Get offset with recoil
+        Quaternion recoilRotation = Quaternion.Euler(-verticalRecoil, horizontalRecoil, 0f);
+        Quaternion recoilOffset = Quaternion.Inverse(startRot) * transform.localRotation *recoilRotation;
+
+        Vector3 euler=recoilOffset.eulerAngles;
+
+        //Convert to 180 degrees for easy clamping
+        euler.x = (euler.x > 180f) ? euler.x - 360f : euler.x;
+        euler.y = (euler.y > 180f) ? euler.y - 360f : euler.y;
+        euler.z = (euler.z > 180f) ? euler.z - 360f : euler.z;
+
+        //actual clamping
+        euler.x = Mathf.Clamp(euler.x, -verticalRecoilAllowed, verticalRecoilAllowed);
+        euler.y = Mathf.Clamp(euler.y, -horizontalRecoilAllowed, horizontalRecoilAllowed);
+        euler.z = Mathf.Clamp(euler.z, 0f, 0f);
+
+        recoilOffset = Quaternion.Euler(euler);
+        recoilTargetRot = startRot * recoilOffset;
+
        
     }
 
@@ -197,12 +318,15 @@ public class WeaponLogic : MonoBehaviour
         playerMovement = GetComponentInParent<PlayerMovement>();
         weaponHandler = GetComponentInParent<WeaponHandler>();
         mainCam = GetComponentInParent<Camera>();
+        crosshairObject = GameObject.Find("Crosshair");
+        crosshairScript = crosshairObject.GetComponent<DynamicCrosshair>();
+        cameraScript = GetComponentInParent<CameraRecoil>();
 
         raycastShootSource = weaponHandler.raycastSource;
-
-
-        //Recoil
-        kickbackLimit = new Vector3(0f, 0f, kickbackOffsetAllowed);
+        originalDirection = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)).direction;
+        direction = originalDirection;
+        spreadControlStatic = spreadControl;
+        recoilControlStatic = recoilControl;
 
     }
 
@@ -237,6 +361,8 @@ public class WeaponLogic : MonoBehaviour
         shootOnceRoutine = null;
         reloadRoutine = null;
 
+        if (fireMode == FireMode.Manual) crosshairObject.SetActive(false);
+        else crosshairObject.SetActive(true);
 
         StartCoroutine(Deploy());
 
@@ -256,7 +382,11 @@ public class WeaponLogic : MonoBehaviour
         {
             transform.localPosition = startPos;
             transform.localRotation = startRot;
+            direction = originalDirection;
         }
+
+        currentHorizontalBulletSpread = 0f;
+        currentVerticalBulletRecoil = 0f;
         
 
         StopAllCoroutines();
@@ -314,42 +444,45 @@ public class WeaponLogic : MonoBehaviour
     {
         currentBulletsInMag--;
 
-       if (currentBulletsInMag == 0)
-            {
-                animator.SetFloat("IsEmpty", 1);
-            }
+        Vector3 dir = default;
+
+        if (currentBulletsInMag == 0)
+        {
+            animator.SetFloat("IsEmpty", 1);
+        }
 
         if (fireMode == FireMode.SemiAuto || fireMode == FireMode.Auto)
         {
-            AddRecoil();
             animator.SetTrigger("Shoot");
-        }
-              
-            else if (fireMode == FireMode.Manual && currentBulletsInMag > 0)
-        {
-            AddRecoil();
+            dir = GetShootDir();
+            crosshairScript.SetSpread(crosshairSpread);
 
-            yield return new WaitForSeconds(0.7f);
+        }
+
+        else if (fireMode == FireMode.Manual && currentBulletsInMag > 0)
+        {
 
             animator.SetTrigger("BoltJerk");
-            canShoot = false;       
+            canShoot = false;
+
+            dir = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)).direction;
+
         }
-        canShoot = false;
 
-        //TODO: update HUD here
-        PlayShootSFX();
+        cameraScript.RecoilFire(verticalRecoil * cameraRecoilMult,horizontalRecoil *cameraRecoilMult,0f);
         DoMuzzleFlash(muzzleFlashSize);
-
-        Vector3 dir = GetShootDir();
-
-        //Recoil here
-        //
+        PlayShootSFX();
+        AddRecoil();
+      
+        canShoot = false;
         bool isHit = false;
         RaycastHit hit;
 
         if (isHit = Physics.Raycast(raycastShootSource.position, dir, out hit, maxShootDistance, hittableLayers, QueryTriggerInteraction.Ignore))
         {
             shootTargetPos = hit.point;
+            HandleHit(hit,shootTargetPos);
+
         }
         else
         {
@@ -371,14 +504,56 @@ public class WeaponLogic : MonoBehaviour
         shootOnceRoutine = null;
 
     }
+    
+    private void HandleHit(RaycastHit hit,Vector3 hitPoint)
+    {
+        LayerMask objectLayer = hit.collider.gameObject.layer;
 
+        if (objectLayer == LayerMask.NameToLayer("Player"))
+        {
+            //Handle hit effect
+        }
+        else
+        {   
+            foreach (GameObject bulletHole in bulletHoleArr)
+            {
+                if (bulletHole.gameObject.layer == objectLayer)
+                {
+                    GameObject tempObj = Instantiate(bulletHole, shootTargetPos, Quaternion.LookRotation(hit.normal));
+                    tempObj.SetActive(true);
+
+                }
+            }
+        }
+    }
+
+ 
     private Vector3 GetShootDir()
     {
-        Vector3 dir = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)).direction;;
 
-        //TODO: Recoil/spread logic here
+        if (float.IsNaN(currentHorizontalBulletSpread) || float.IsNaN(currentVerticalBulletRecoil))
+        {
+            currentHorizontalBulletSpread = 0f;
+            currentVerticalBulletRecoil = 0f;
+        }
 
-        return dir;
+
+        float randomSpread = Random.Range(-horizontalBulletSpread, horizontalBulletSpread);
+
+        Quaternion spreadRotation = Quaternion.Euler(-currentVerticalBulletRecoil, currentHorizontalBulletSpread, 0f);
+        Quaternion finalRotation = mainCam.transform.rotation * spreadRotation;
+
+
+        float verticalFactor = Mathf.Pow(currentVerticalBulletRecoil / verticalBulletMax, 2f);
+        float horizontalFactor = Mathf.Pow(Mathf.Abs(currentHorizontalBulletSpread) / horizontalBulletMax, 2f);
+
+        currentVerticalBulletRecoil += verticalBulletRecoil * (1f + verticalFactor) * currentRecoilControl;
+        currentHorizontalBulletSpread += randomSpread * (1f + horizontalFactor) * currentSpreadControl;
+
+        currentHorizontalBulletSpread = Mathf.Clamp(currentHorizontalBulletSpread, -horizontalBulletMax, horizontalBulletMax);
+        currentVerticalBulletRecoil = Mathf.Clamp(currentVerticalBulletRecoil, 0f, verticalBulletMax);
+
+        return finalRotation * Vector3.forward;
     }
 
     private Vector3 GetShotSpread()

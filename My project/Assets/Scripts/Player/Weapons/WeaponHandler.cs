@@ -49,26 +49,26 @@ public class WeaponHandler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space)) onJumpPressed?.Invoke();
 
 
-        if (Input.GetKeyDown(KeyCode.Alpha1))
+        if (Input.GetKeyDown(KeyCode.Alpha1) && primaryWeapon!=null)
         {
             if (currentHeld != primaryWeapon)
             {
                 previousHeld = currentHeld;
                 currentHeld = primaryWeapon;
 
-                previousHeld.SetActive(false);
+                if (previousHeld!=null) previousHeld.SetActive(false);
                 currentHeld.SetActive(true);
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Alpha2))
+        if (Input.GetKeyDown(KeyCode.Alpha2) && secondaryWeapon!=null)
         {
             if (currentHeld != secondaryWeapon)
             {
                 previousHeld = currentHeld;
                 currentHeld = secondaryWeapon;
 
-                previousHeld.SetActive(false);
+                if (previousHeld!=null) previousHeld.SetActive(false);
                 currentHeld.SetActive(true);
             
             }
@@ -82,7 +82,7 @@ public class WeaponHandler : MonoBehaviour
                 previousHeld = currentHeld;
                 currentHeld = knife;
 
-                previousHeld.SetActive(false);
+                if (previousHeld!=null) previousHeld.SetActive(false);
                 currentHeld.SetActive(true);
             }
             
@@ -95,7 +95,7 @@ public class WeaponHandler : MonoBehaviour
             currentHeld = tempHolder;
 
           
-            previousHeld.SetActive(false);
+            if (previousHeld!=null) previousHeld.SetActive(false);
             currentHeld.SetActive(true);
         
         }
