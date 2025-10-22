@@ -7,6 +7,7 @@ public class DynamicCrosshair : MonoBehaviour
     public RectTransform bottom;
     public RectTransform left;
     public RectTransform right;
+    public GameObject crosshairObj;
 
     [Header("Crosshair Settings")]
     public float size = 10f;
@@ -16,13 +17,14 @@ public class DynamicCrosshair : MonoBehaviour
     public Color color = Color.green;
     public int maxSpread;
     public float recoverySpeed;
-
+    public static DynamicCrosshair instance;
 
     private Vector2 originalTopPos, originalBottomPos, originalLeftPos, originalRightPos;
 
 
     void Start()
     {
+        instance = this;
         dynamicGap = gap;
         foreach (var arm in new[] { top, bottom, left, right })
         {
@@ -55,7 +57,7 @@ public class DynamicCrosshair : MonoBehaviour
         right.anchoredPosition = new Vector2(gap + size / 2, 0);
     }
 
-    public void SetSpread(float spread=0f)
+    public void SetSpread(float spread = 0f)
     {
         dynamicGap += spread;
         dynamicGap = Mathf.Clamp(dynamicGap, gap, maxSpread);
@@ -64,5 +66,15 @@ public class DynamicCrosshair : MonoBehaviour
         bottom.anchoredPosition = new Vector2(0, -(dynamicGap + size / 2));
         left.anchoredPosition = new Vector2(-(dynamicGap + size / 2), 0);
         right.anchoredPosition = new Vector2(dynamicGap + size / 2, 0);
+    }
+
+    public void Disable()
+    {
+        crosshairObj.SetActive(false);
+    }
+    
+    public void Enable()
+    {
+        crosshairObj.SetActive(true);
     }
 }

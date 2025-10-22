@@ -1,31 +1,34 @@
 using System.Collections;
-using Unity.Cinemachine;
-using UnityEditor.EditorTools;
+
 using UnityEngine;
-using UnityEngine.Events;
 
 public class WeaponLogic : MonoBehaviour
 {
     [Header("Refferences")]
+    public GameObject weaponPrefab;
     public Transform visualShootSource;
     private WeaponHandler weaponHandler;
-    private Transform raycastShootSource;
+    public Transform raycastShootSource;
     private Animator animator;
     private PlayerMovement playerMovement;
     private Camera mainCam;
-    private CameraRecoil cameraScript;
-    private DynamicCrosshair crosshairScript;
-    private GameObject crosshairObject;
+    private CameraController cameraScript;
+    public string weaponName;
+
+
 
     [Header("Settings")]
-    [SerializeField] private FireMode fireMode;
+    public FireMode fireMode;
     [SerializeField] private float deployTime;
 
     [Tooltip("Rate of fire in rounds per minute/ includes semi auto/ excludes bolt action")]
     [SerializeField] private float fireRate = 600;
 
     [Tooltip("Shotgun spread")]
-    [SerializeField] private float ShotSpread = 0f;
+    [SerializeField] private float shotSpread = 0f;
+
+    [Tooltip("Shotgun Pellets per shot")]
+    [SerializeField] private float pelletCount = 0f;
 
     [Tooltip("Useful for shotguns")]
     [SerializeField] private bool interruptableReload;
@@ -53,8 +56,8 @@ public class WeaponLogic : MonoBehaviour
 
     private float fireInterval => 60f / fireRate;
 
-    [SerializeField]private int currentBulletsInMag;
-    [SerializeField]private int currentBulletsInStock;
+    [SerializeField] public int currentBulletsInMag;
+    [SerializeField] public int currentBulletsInStock;
 
 
     private WaitForSeconds waitForNextShoot;
@@ -74,7 +77,11 @@ public class WeaponLogic : MonoBehaviour
     private float muzzleFlashLightSpeed => 1 / muzzleFlashLightTime;
     private float muzzleFlashLightIntensity;
 
-    [Header("Recoil")]
+
+
+
+
+    [Header("Weapon Recoil")]
     private Vector3 startPos;
     private Quaternion startRot;
     [SerializeField] private float kickbackOffsetAllowed;
@@ -103,6 +110,13 @@ public class WeaponLogic : MonoBehaviour
     private Quaternion recoilTargetRot;
     private Vector3 recoilVelocityRef;
     private bool weaponShot;
+
+
+
+
+
+    [Header("Bulet Recoil")]
+
     [SerializeField] float crosshairSpread;
 
     [Tooltip("How far the bullet moves up")]
@@ -123,6 +137,10 @@ public class WeaponLogic : MonoBehaviour
     [Tooltip("Bullet recoil/sway return speed")]
     [SerializeField] float directionReturnSpeed;
 
+    [Range(0, 5)]
+    [Tooltip("Variation in the vertical recoil limit")]
+    [SerializeField] float verticalMaxVariation = 1f;
+
     [Tooltip("how much to reduce/increase the effect of recoil by")]
     [Range(0, 5)]
     [SerializeField] private float recoilControl;
@@ -134,7 +152,7 @@ public class WeaponLogic : MonoBehaviour
     [Range(0, 5)]
     [SerializeField] private float cameraRecoilMult;
 
-    [Range(0, 5)]
+    [Range(0, 10)]
     [SerializeField] private float cameraSpreadMult;
     private float spreadControlStatic;
     private float recoilControlStatic;
@@ -142,11 +160,14 @@ public class WeaponLogic : MonoBehaviour
 
     private float currentRecoilControl; //used to change value runtime
     private float currentSpreadControl;
-    
+
 
     Vector3 direction;
     Vector3 originalDirection;
-    
+
+
+
+
 
     [Header("SFX/VFX")]
     private ParticleSystem muzzleParticleSystem;
@@ -160,6 +181,10 @@ public class WeaponLogic : MonoBehaviour
 
 
 
+    [Header("Other")]
+    public int cost;
+
+
     public enum FireMode
     {
         Manual,
@@ -167,6 +192,14 @@ public class WeaponLogic : MonoBehaviour
         Auto
     }
 
+
+    public enum Type
+    {
+        Primary,
+        Secondary,
+    }
+
+    public Type weaponType;
 
 
 
@@ -190,7 +223,7 @@ public class WeaponLogic : MonoBehaviour
         currentSpreadControl = spreadControl; //neccessary for bullet recoil
 
         RecoverRecoil();
-        PassPlayerSpeedToAnimator(); 
+        PassPlayerSpeedToAnimator();
     }
 
 
@@ -226,7 +259,7 @@ public class WeaponLogic : MonoBehaviour
                 ref recoilVelocityRef,
                 kickbackSmoothing
             );
-            
+
             //add horizontal and vertical recoil
             transform.localRotation = Quaternion.Slerp(transform.localRotation, recoilTargetRot, verticalRecoilSmoothing);
 
@@ -244,8 +277,8 @@ public class WeaponLogic : MonoBehaviour
 
             currentHorizontalBulletSpread = Mathf.MoveTowards(currentHorizontalBulletSpread, 0f, directionReturnSpeed * Time.deltaTime);
             currentVerticalBulletRecoil = Mathf.MoveTowards(currentVerticalBulletRecoil, 0f, directionReturnSpeed * Time.deltaTime);
-            
-            direction = originalDirection + new Vector3(currentHorizontalBulletSpread,currentVerticalBulletRecoil,0f);
+
+            direction = originalDirection + new Vector3(currentHorizontalBulletSpread, currentVerticalBulletRecoil, 0f);
 
         }
     }
@@ -269,14 +302,14 @@ public class WeaponLogic : MonoBehaviour
             Mathf.Clamp(localOffset.y, -verticalRecoilAllowed, verticalRecoilAllowed),
             Mathf.Clamp(localOffset.z, -kickbackOffsetAllowed, kickbackOffsetAllowed)
         );
-       
+
         recoilTargetPos = localOffset + startPos;
 
         //Get offset with recoil
         Quaternion recoilRotation = Quaternion.Euler(-verticalRecoil, horizontalRecoil, 0f);
-        Quaternion recoilOffset = Quaternion.Inverse(startRot) * transform.localRotation *recoilRotation;
+        Quaternion recoilOffset = Quaternion.Inverse(startRot) * transform.localRotation * recoilRotation;
 
-        Vector3 euler=recoilOffset.eulerAngles;
+        Vector3 euler = recoilOffset.eulerAngles;
 
         //Convert to 180 degrees for easy clamping
         euler.x = (euler.x > 180f) ? euler.x - 360f : euler.x;
@@ -291,7 +324,7 @@ public class WeaponLogic : MonoBehaviour
         recoilOffset = Quaternion.Euler(euler);
         recoilTargetRot = startRot * recoilOffset;
 
-       
+
     }
 
     public void InitWeapon()
@@ -317,10 +350,8 @@ public class WeaponLogic : MonoBehaviour
         animator = GetComponent<Animator>();
         playerMovement = GetComponentInParent<PlayerMovement>();
         weaponHandler = GetComponentInParent<WeaponHandler>();
-        mainCam = GetComponentInParent<Camera>();
-        crosshairObject = GameObject.Find("Crosshair");
-        crosshairScript = crosshairObject.GetComponent<DynamicCrosshair>();
-        cameraScript = GetComponentInParent<CameraRecoil>();
+        mainCam = Camera.main;
+        cameraScript = GameObject.Find("MainCamera").GetComponent<CameraController>();
 
         raycastShootSource = weaponHandler.raycastSource;
         originalDirection = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)).direction;
@@ -361,8 +392,8 @@ public class WeaponLogic : MonoBehaviour
         shootOnceRoutine = null;
         reloadRoutine = null;
 
-        if (fireMode == FireMode.Manual) crosshairObject.SetActive(false);
-        else crosshairObject.SetActive(true);
+        if (fireMode == FireMode.Manual) DynamicCrosshair.instance.Disable();
+        else DynamicCrosshair.instance.Enable();
 
         StartCoroutine(Deploy());
 
@@ -374,6 +405,7 @@ public class WeaponLogic : MonoBehaviour
             weaponHandler.OnWeaponReloadPressed += Reload;
             WeaponHandler.OnWeaponInspectPressed += OnInspectPressed;
         }
+
     }
 
     private void OnDisable()
@@ -387,7 +419,7 @@ public class WeaponLogic : MonoBehaviour
 
         currentHorizontalBulletSpread = 0f;
         currentVerticalBulletRecoil = 0f;
-        
+
 
         StopAllCoroutines();
         shootOnceRoutine = null;
@@ -432,7 +464,6 @@ public class WeaponLogic : MonoBehaviour
             animator.SetTrigger("Locomotion");
             canShoot = true;
 
-            return;
         }
         else if (shootOnceRoutine == null)
         {
@@ -454,8 +485,10 @@ public class WeaponLogic : MonoBehaviour
         if (fireMode == FireMode.SemiAuto || fireMode == FireMode.Auto)
         {
             animator.SetTrigger("Shoot");
-            dir = GetShootDir();
-            crosshairScript.SetSpread(crosshairSpread);
+
+            if (shotSpread == 0) dir = GetShootDir();
+
+            DynamicCrosshair.instance.SetSpread(crosshairSpread);
 
         }
 
@@ -469,27 +502,50 @@ public class WeaponLogic : MonoBehaviour
 
         }
 
-        cameraScript.RecoilFire(verticalRecoil * cameraRecoilMult,horizontalRecoil *cameraRecoilMult,0f);
+        cameraScript.RecoilFire(verticalRecoil * cameraRecoilMult, horizontalRecoil * cameraRecoilMult, 0f);
         DoMuzzleFlash(muzzleFlashSize);
         PlayShootSFX();
         AddRecoil();
-      
+
         canShoot = false;
         bool isHit = false;
         RaycastHit hit;
 
-        if (isHit = Physics.Raycast(raycastShootSource.position, dir, out hit, maxShootDistance, hittableLayers, QueryTriggerInteraction.Ignore))
+        if (shotSpread > 0)  //Handle hit for each shotgun pellet 
         {
-            shootTargetPos = hit.point;
-            HandleHit(hit,shootTargetPos);
+            for (int x = 0; x < pelletCount; x++)
+            {
+                dir = GetShotSpread();
 
+                if (isHit = Physics.Raycast(raycastShootSource.position, dir, out hit, maxShootDistance, hittableLayers, QueryTriggerInteraction.Ignore))
+                {
+                    shootTargetPos = hit.point;
+                    HandleHit(hit);
+                    //TODO: Spawn Tracer
+                }
+                else
+                {
+                    shootTargetPos = raycastShootSource.position + raycastShootSource.forward * maxShootDistance;
+                    //TODO: Spawn Tracer
+                }
+            }
         }
-        else
+        else //handle hit for normal weapon
         {
-            shootTargetPos = raycastShootSource.position + raycastShootSource.forward * maxShootDistance;
+            if (isHit = Physics.Raycast(raycastShootSource.position, dir, out hit, maxShootDistance, hittableLayers, QueryTriggerInteraction.Ignore))
+            {
+                shootTargetPos = hit.point;
+                HandleHit(hit);
+                //TODO: Spawn Tracer
+            }
+            else
+            {
+                shootTargetPos = raycastShootSource.position + raycastShootSource.forward * maxShootDistance;
+                //TODO: Spawn Tracer
+            }
         }
 
-        //TODO: Hit logic here
+
 
         if (currentBulletsInMag > 0)
         {
@@ -504,8 +560,14 @@ public class WeaponLogic : MonoBehaviour
         shootOnceRoutine = null;
 
     }
-    
-    private void HandleHit(RaycastHit hit,Vector3 hitPoint)
+
+
+    private void SpawnTracer()
+    {
+
+    }
+
+    private void HandleHit(RaycastHit hit)
     {
         LayerMask objectLayer = hit.collider.gameObject.layer;
 
@@ -514,12 +576,12 @@ public class WeaponLogic : MonoBehaviour
             //Handle hit effect
         }
         else
-        {   
+        {
             foreach (GameObject bulletHole in bulletHoleArr)
             {
                 if (bulletHole.gameObject.layer == objectLayer)
                 {
-                    GameObject tempObj = Instantiate(bulletHole, shootTargetPos, Quaternion.LookRotation(hit.normal));
+                    GameObject tempObj = Instantiate(bulletHole, hit.point, Quaternion.LookRotation(hit.normal));
                     tempObj.SetActive(true);
 
                 }
@@ -527,7 +589,7 @@ public class WeaponLogic : MonoBehaviour
         }
     }
 
- 
+
     private Vector3 GetShootDir()
     {
 
@@ -550,8 +612,10 @@ public class WeaponLogic : MonoBehaviour
         currentVerticalBulletRecoil += verticalBulletRecoil * (1f + verticalFactor) * currentRecoilControl;
         currentHorizontalBulletSpread += randomSpread * (1f + horizontalFactor) * currentSpreadControl;
 
+
+
         currentHorizontalBulletSpread = Mathf.Clamp(currentHorizontalBulletSpread, -horizontalBulletMax, horizontalBulletMax);
-        currentVerticalBulletRecoil = Mathf.Clamp(currentVerticalBulletRecoil, 0f, verticalBulletMax);
+        currentVerticalBulletRecoil = Mathf.Clamp(currentVerticalBulletRecoil, 0f, verticalBulletMax + Random.Range(-verticalMaxVariation, verticalMaxVariation));
 
         return finalRotation * Vector3.forward;
     }
@@ -560,7 +624,7 @@ public class WeaponLogic : MonoBehaviour
     {
         Vector3 dir = raycastShootSource.forward * 2;
 
-        dir += Random.onUnitSphere * ShotSpread;
+        dir += Random.onUnitSphere * shotSpread;
 
         return dir.normalized;
     }
@@ -639,6 +703,8 @@ public class WeaponLogic : MonoBehaviour
         {
             //wait for at least one round insert
             yield return waitForReloadNormal;
+            canShoot = true;
+
         }
         else
         {
@@ -664,7 +730,7 @@ public class WeaponLogic : MonoBehaviour
 
             //TODO: Update HUD
 
-            canShoot = true;    
+            canShoot = true;
             reloadRoutine = null;
         }
     }
@@ -676,6 +742,9 @@ public class WeaponLogic : MonoBehaviour
         {
             currentBulletsInStock--;
             currentBulletsInMag++;
+
+            // animator.SetFloat("IsEmpty", 0);
+
             //TODO: update HUD
         }
         else
