@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 69c1b66b47316aa4aa0a680404e5cce9
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Examples/Scenes/LightGunShooter.unity
+  uploadId: 635717

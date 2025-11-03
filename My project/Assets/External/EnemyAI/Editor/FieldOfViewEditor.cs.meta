@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: abc3584d30ccb7f4abf6d1f4987eddcf
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Editor/FieldOfViewEditor.cs
+  uploadId: 635717

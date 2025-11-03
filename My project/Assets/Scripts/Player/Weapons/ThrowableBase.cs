@@ -9,6 +9,17 @@ public class ThrowableBase : MonoBehaviour
     public GameObject parentGrenade;
     public int cost;
 
+    public enum Type
+    {
+        Fire,
+        Smoke,
+        Flash,
+        HE,
+        Decoy
+    }
+    public Type type;
+
+
     public IEnumerator DestroyInstance(float aliveTime)
     {
         yield return new WaitForSeconds(aliveTime);

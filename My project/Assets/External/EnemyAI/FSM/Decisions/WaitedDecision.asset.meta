@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 26c7d10091e2f484880c8accf38284eb
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/FSM/Decisions/WaitedDecision.asset
+  uploadId: 635717

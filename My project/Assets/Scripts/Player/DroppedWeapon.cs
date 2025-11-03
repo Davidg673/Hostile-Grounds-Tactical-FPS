@@ -19,9 +19,10 @@ public class DroppedWeapon : MonoBehaviour
     {
         if (!canPickUp) return;
         WeaponHandler tempScript = collider.GetComponentInParent<WeaponHandler>();
-        
+        if (tempScript == null) return;
+
         if (!isGrenade)
-        {   
+        {
             if (tempScript.PickUpWeapon(parentWeapon, ammoInStock, ammoInMag)) Destroy(gameObject);
         }
         else

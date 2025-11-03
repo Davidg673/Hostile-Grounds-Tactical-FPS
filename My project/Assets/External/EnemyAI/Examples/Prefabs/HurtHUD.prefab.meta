@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 96c82f1df8075f24aa60ec228a6b40dc
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Examples/Prefabs/HurtHUD.prefab
+  uploadId: 635717

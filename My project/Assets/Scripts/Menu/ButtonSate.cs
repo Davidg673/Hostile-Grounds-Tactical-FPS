@@ -10,7 +10,7 @@ public class ButtonSate : MonoBehaviour
     private TMP_Text buttonText;
     private Button attachedButton;
     public int cost; //used by menu to know if the player can afford a weapon
-
+    public int maximumAllowed;
 
     public void Initialize()
     {

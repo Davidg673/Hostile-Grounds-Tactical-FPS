@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c36cfdd3bf7b03b4782a4fc86e59b431
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/FSM/Actions/FocusMoveAction.asset
+  uploadId: 635717

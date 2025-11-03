@@ -1,0 +1,12 @@
+fileFormatVersion: 2
+guid: 5e9e851c0e142814dac026a256ba2ac0
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Examples/Characters/FirstPersonCharacter/Prefabs/FPSController.prefab
+  uploadId: 635717

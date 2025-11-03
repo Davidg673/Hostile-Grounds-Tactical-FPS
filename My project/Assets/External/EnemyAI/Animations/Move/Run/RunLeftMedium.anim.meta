@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: bed66b414692994428f543b1a9544aff
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Animations/Move/Run/RunLeftMedium.anim
+  uploadId: 635717

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f01499156423b0f45af71e2a2e44b6b9
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/EnemyAI/Prefabs/enemyHealth.prefab
+  uploadId: 635717

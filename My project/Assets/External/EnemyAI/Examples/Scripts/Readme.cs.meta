@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 9b4b451f8c32afa4cac1f12327ace150
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Examples/Scripts/Readme.cs
+  uploadId: 635717

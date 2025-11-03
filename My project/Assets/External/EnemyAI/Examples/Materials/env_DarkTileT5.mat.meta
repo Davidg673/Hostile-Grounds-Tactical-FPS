@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: f96dab157c94b6d4a93698e12cd3cf15
+NativeFormatImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Examples/Materials/env_DarkTileT5.mat
+  uploadId: 635717

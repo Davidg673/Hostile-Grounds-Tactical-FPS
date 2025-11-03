@@ -7,6 +7,7 @@ public class WeaponLogic : MonoBehaviour
     [Header("Refferences")]
     public GameObject weaponPrefab;
     public Transform visualShootSource;
+    public Transform smokeVFXSource;
     private WeaponHandler weaponHandler;
     public Transform raycastShootSource;
     private Animator animator;
@@ -52,7 +53,7 @@ public class WeaponLogic : MonoBehaviour
     [SerializeField] private float muzzleFlashLightTime = 0.2f;
 
     [SerializeField] private int magCapacity = 30;
-    [SerializeField] private int maxBulletsAllowed = 120;
+    [SerializeField] private int maxBulletsAllowed = 120; 
 
     private float fireInterval => 60f / fireRate;
 
@@ -74,6 +75,7 @@ public class WeaponLogic : MonoBehaviour
     private bool canShoot = false;
 
     private ParticleSystem.MainModule muzzlePsMainModule;
+    private ParticleSystem.MainModule smokePsMainModule;
     private float muzzleFlashLightSpeed => 1 / muzzleFlashLightTime;
     private float muzzleFlashLightIntensity;
 
@@ -171,18 +173,25 @@ public class WeaponLogic : MonoBehaviour
 
     [Header("SFX/VFX")]
     private ParticleSystem muzzleParticleSystem;
+    private ParticleSystem smokeParticleSystem;
     private AudioSource sfxSource;
     private Light muzzleFlashLight;
     [SerializeField] private AudioClip shootClip;
-    [SerializeField] private AudioClip emptyShootClip;
+    [SerializeField] private AudioClip[] richochetClip;
+    [SerializeField] private AudioClip[] emptyShootClip;
     [SerializeField] private AudioClip[] reloadSequenceSFXs;
     [SerializeField] private GameObject[] bulletHoleArr;
-
+    [SerializeField] AudioClip pullClip;
 
 
 
     [Header("Other")]
     public int cost;
+    [SerializeField] float damage;
+    private PlayerUI playerUI;
+    [SerializeField] Transform bulletEjectPoint;
+    [SerializeField] Transform bulletEjectDir;
+    [SerializeField] GameObject ejectedBulletObject;
 
 
     public enum FireMode
@@ -238,6 +247,7 @@ public class WeaponLogic : MonoBehaviour
         {
             recoilControl = recoilControlStatic * 1.5f;
             spreadControl = spreadControlStatic * 1.5f;
+            DynamicCrosshair.instance.SetSpread(0.5f);
         }
         else
         {
@@ -341,23 +351,28 @@ public class WeaponLogic : MonoBehaviour
 
 
         muzzleParticleSystem = visualShootSource.GetComponent<ParticleSystem>();
+        smokeParticleSystem= smokeVFXSource.GetComponent<ParticleSystem>();
         sfxSource = visualShootSource.GetComponent<AudioSource>();
         if (muzzleParticleSystem != null) muzzlePsMainModule = muzzleParticleSystem.main;
+        if (smokeParticleSystem != null) smokePsMainModule = smokeParticleSystem.main;
         muzzleFlashLight = visualShootSource.GetComponent<Light>();
         muzzleFlashLightIntensity = muzzleFlashLight.intensity;
         muzzleFlashLight.intensity = 0;
+        muzzleFlashLight.enabled = true;
 
         animator = GetComponent<Animator>();
         playerMovement = GetComponentInParent<PlayerMovement>();
         weaponHandler = GetComponentInParent<WeaponHandler>();
         mainCam = Camera.main;
         cameraScript = GameObject.Find("MainCamera").GetComponent<CameraController>();
+        playerUI = GetComponentInParent<PlayerUI>();
 
         raycastShootSource = weaponHandler.raycastSource;
         originalDirection = Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)).direction;
         direction = originalDirection;
         spreadControlStatic = spreadControl;
         recoilControlStatic = recoilControl;
+
 
     }
 
@@ -393,7 +408,7 @@ public class WeaponLogic : MonoBehaviour
         reloadRoutine = null;
 
         if (fireMode == FireMode.Manual) DynamicCrosshair.instance.Disable();
-        else DynamicCrosshair.instance.Enable();
+        else DynamicCrosshair.instance?.Enable();
 
         StartCoroutine(Deploy());
 
@@ -406,6 +421,7 @@ public class WeaponLogic : MonoBehaviour
             WeaponHandler.OnWeaponInspectPressed += OnInspectPressed;
         }
 
+        if (pullClip) sfxSource.PlayOneShot(pullClip);
     }
 
     private void OnDisable()
@@ -430,6 +446,8 @@ public class WeaponLogic : MonoBehaviour
             weaponHandler.OnWeaponReloadPressed -= Reload;
             WeaponHandler.OnWeaponInspectPressed -= OnInspectPressed;
         }
+        muzzleFlashLight.intensity = 0f;
+
     }
 
 
@@ -443,7 +461,7 @@ public class WeaponLogic : MonoBehaviour
         }
         else
         {
-            if (emptyShootClip != null && reloadRoutine == null)
+            if (emptyShootClip.Length>0 && reloadRoutine == null)
             {
                 if (emptyShootRoutine == null)
                 {
@@ -570,20 +588,24 @@ public class WeaponLogic : MonoBehaviour
     private void HandleHit(RaycastHit hit)
     {
         LayerMask objectLayer = hit.collider.gameObject.layer;
+        string objectTag = hit.collider.gameObject.tag;
 
-        if (objectLayer == LayerMask.NameToLayer("Player"))
+        if (((1 << objectLayer) & playerUI.enemyLayer) != 0)
         {
-            //Handle hit effect
+            hit.collider.SendMessageUpwards("HitCallback", new HealthManager.DamageInfo(hit.point, transform.position, damage, hit.collider,gameObject), SendMessageOptions.DontRequireReceiver);
         }
-        else
+        else if (((1 << objectLayer) & playerUI.teamLayer) == 0)
         {
             foreach (GameObject bulletHole in bulletHoleArr)
             {
-                if (bulletHole.gameObject.layer == objectLayer)
+                if (bulletHole.gameObject.layer == objectLayer || bulletHole.tag == objectTag)
                 {
                     GameObject tempObj = Instantiate(bulletHole, hit.point, Quaternion.LookRotation(hit.normal));
                     tempObj.SetActive(true);
 
+                    float richochetChance = Random.value;
+                    int clipIndex = Random.Range(0, 1);
+                    if (richochetChance < 0.05) AudioSource.PlayClipAtPoint(richochetClip[clipIndex],hit.point);
                 }
             }
         }
@@ -642,6 +664,10 @@ public class WeaponLogic : MonoBehaviour
         muzzlePsMainModule.startSizeMultiplier = size;
         muzzleParticleSystem.Emit(1);
 
+        smokePsMainModule.startSizeMultiplier = size;
+        smokeParticleSystem.Emit(1);
+
+
         if (muzzleFlashLightRoutine != null) StopCoroutine(muzzleFlashLightRoutine);
         muzzleFlashLightRoutine = StartCoroutine(MuzzleFlashLightAnim());
     }
@@ -664,8 +690,11 @@ public class WeaponLogic : MonoBehaviour
     }
     private IEnumerator EmptyShoot()
     {
-        if (emptyShootClip != null)
-            sfxSource.PlayOneShot(emptyShootClip);
+        if (emptyShootClip.Length > 0)
+        {
+            int clipIndex = Random.Range(0, emptyShootClip.Length);
+            sfxSource.PlayOneShot(emptyShootClip[clipIndex]);   
+        }
 
         yield return new WaitForSeconds(fireInterval * 4);
 
@@ -783,6 +812,20 @@ public class WeaponLogic : MonoBehaviour
     private int GetEmptyBulletSlots()
     {
         return magCapacity - currentBulletsInMag;
+    }
+
+    public void EjectBullet()
+    {
+        Quaternion rotationFix = Quaternion.Euler(90f, 0f, 0f); 
+        GameObject ejectedBullet = Instantiate(ejectedBulletObject, bulletEjectPoint.position, Quaternion.LookRotation(Camera.main.transform.forward) * rotationFix);
+        ejectedBullet.SetActive(true);
+        Rigidbody rb = ejectedBullet.GetComponent<Rigidbody>();
+
+
+        float randomDir = Random.Range(0f, 2f);
+        Vector3 ejectDir = (bulletEjectDir.forward * randomDir).normalized;
+        rb.AddForce(Vector3.up * 0.5f, ForceMode.Impulse);
+        rb.AddForce(ejectDir * 15f, ForceMode.Impulse);
     }
 
 }

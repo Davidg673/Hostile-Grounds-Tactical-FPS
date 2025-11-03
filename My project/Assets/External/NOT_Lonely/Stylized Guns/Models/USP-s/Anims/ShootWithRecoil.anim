@@ -112,8 +112,7 @@ AnimationClip:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: {x: -0.00000013315808, y: -0.00000008940694, z: 0.000000009313214,
-          w: 1}
+        value: {x: -0.00000013315808, y: -0.00000008940694, z: 0.000000009313214, w: 1}
         inSlope: {x: 0, y: 0, z: 0, w: 0}
         outSlope: {x: 0.00051228545, y: 0.00008196214, z: 0.00010970265, w: 0}
         tangentMode: 0
@@ -122,8 +121,7 @@ AnimationClip:
         outWeight: {x: 0.33333334, y: 0.33333334, z: 0.33333334, w: 0.33333334}
       - serializedVersion: 3
         time: 0.03333378
-        value: {x: -0.00000013315805, y: -0.000000089406974, z: 0.000000009313214,
-          w: 1}
+        value: {x: -0.00000013315805, y: -0.000000089406974, z: 0.000000009313214, w: 1}
         inSlope: {x: -0.523749, y: -0.09774347, z: -0.08653089, w: 0}
         outSlope: {x: -0.52653056, y: -0.09823412, z: -0.087010264, w: 0}
         tangentMode: 0
@@ -42032,4 +42030,11 @@ AnimationClip:
     flags: 0
   m_HasGenericRootTransform: 0
   m_HasMotionFloatCurves: 0
-  m_Events: []
+  m_Events:
+  - time: 0.1
+    functionName: EjectBullet
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 466d2d618799f3347a93d0949c3a6838
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Materials/spark.mat
+  uploadId: 635717

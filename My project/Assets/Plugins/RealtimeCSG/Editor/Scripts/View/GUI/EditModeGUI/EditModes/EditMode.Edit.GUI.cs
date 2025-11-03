@@ -47,8 +47,7 @@ namespace RealtimeCSG
 						buttonArea.y += 2;
 						buttonArea.height = 13;
 						buttonArea.width = 13;
-						if (GUI.Button(buttonArea, GUIContent.none, "WinBtnClose"))
-							EditModeToolWindowSceneGUI.GetWindow();
+		
 						TooltipUtility.SetToolTip(CSG_GUIStyleUtility.PopOutTooltip, buttonArea);
 
 						int controlID = GUIUtility.GetControlID(SceneViewMeshOverlayHash, FocusType.Keyboard, currentArea);

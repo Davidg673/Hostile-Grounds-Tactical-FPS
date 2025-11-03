@@ -12,12 +12,12 @@ public class CameraController : MonoBehaviour
     Vector3 targetPosition;
     Vector3 basePosition;
     [SerializeField] GameObject weaponHolder;
-    float smoothX = 0.2f; 
+    float smoothX = 0.2f;
     float smoothY = 0.05f;
     float velX = 0f, velY = 0f;
     public static bool canRun = true;
     public float lookSpeedY = 2f;
-    public float baseLookSpeedY=2f;
+    public float baseLookSpeedY = 2f;
     public float lookXLimit = 45f;
     private float rotationX = 0;
 
@@ -30,8 +30,9 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        if (!canRun) return;
-        MoveCamera();
+        if (canRun) MoveCamera();
+
+        if (!GameController.gameRunning) return;
 
         Vector3 currentPos = transform.localPosition;
 
@@ -51,18 +52,18 @@ public class CameraController : MonoBehaviour
 
         transform.localPosition = currentPos;
         HandleCamMovement();
-    }   
+    }
 
     void LateUpdate()
     {
         //makes sure camera moves first, then the object to avoid visual stutters
-        weaponHolder.transform.rotation =transform.rotation;    
+        weaponHolder.transform.rotation = transform.rotation;
 
     }
 
     public void RecoilFire(float recoilX, float recoilY, float recoilZ)
     {
-        targetRotation += new Vector3(-recoilX, Random.Range(-recoilY, recoilY), Random.Range(-recoilZ, recoilZ)) *2f;
+        targetRotation += new Vector3(-recoilX, Random.Range(-recoilY, recoilY), Random.Range(-recoilZ, recoilZ)) * 2f;
     }
 
     private void MoveCamera()
@@ -103,7 +104,13 @@ public class CameraController : MonoBehaviour
             if (Mathf.Abs(Input.GetAxisRaw("Vertical")) < 0.05f) targetPosition.z = basePosition.z;
             if (Mathf.Abs(Input.GetAxisRaw("Horizontal")) < 0.05f) targetPosition.x = basePosition.x;
             if (Mathf.Abs(Input.GetAxisRaw("Vertical")) < 0.05f && Mathf.Abs(Input.GetAxisRaw("Horizontal")) < 0.05f) targetPosition.y = basePosition.y;
-        } 
+        }
+    }
+
+
+    public void TiltCamera(float rotationForce, float randomFactor)
+    {
+        targetRotation += new Vector3(0f, 0f, rotationForce * Random.Range(-randomFactor, randomFactor));
     }
 
 }

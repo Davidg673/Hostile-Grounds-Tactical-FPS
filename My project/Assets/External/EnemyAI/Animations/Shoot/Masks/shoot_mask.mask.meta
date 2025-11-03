@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: e45eab74e8109ef4fad81b3e7465e90e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Animations/Shoot/Masks/shoot_mask.mask
+  uploadId: 635717

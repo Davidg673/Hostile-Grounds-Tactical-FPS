@@ -1,11 +1,6 @@
-using System;
 using System.Collections.Generic;
-using NL;
-using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Rendering.UI;
-
 public class WeaponHandler : MonoBehaviour
 {
     public UnityAction onJumpPressed;
@@ -33,25 +28,44 @@ public class WeaponHandler : MonoBehaviour
     public static UnityAction OnBuyMenuOpened;
     public UnityAction OnWeaponSwitched;
     public static bool canRun = true;
-    bool canClickMouseTwo=true;
-
-    void Start()
-    {
-        if (hideCursor)
-            ToggleCursorState(true);
-        currentHeld = knife;
-        previousHeld = secondaryWeapon;
-        currentHeld.SetActive(true);
-    }
-
+    bool canClickMouseTwo = true;
+    public static bool buyTimeout;
+    public static bool inBuyZone;
+    [SerializeField] GameObject uspInstance;
+    [SerializeField] GameObject glockInstance;
 
     void Update()
     {
-        if (canRun) HandleInput();
+        HandleInput();
     }
 
     void HandleInput()
     {
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+
+            if (!buyTimeout && inBuyZone)
+            {
+                ToggleCursorState(false);
+                canRun = false;
+                PlayerMovement.canMove = false;
+                CameraController.canRun = false;
+                BuyableMenuController.canRun = true;
+                GameController.gameRunning = false;
+                OnBuyMenuOpened?.Invoke();
+            }
+            if (buyTimeout)
+            {
+                GameController.DisplayMessage("90 seconds have passed, you cannot buy anymore!", 2f);
+            }
+            else if (!inBuyZone)
+            {
+                GameController.DisplayMessage("You need to be in a buy zone!", 2f);
+            }
+        }
+
+        if (!GameController.gameRunning || !canRun) return;
 
         if (Input.GetKeyDown(KeyCode.Space)) onJumpPressed?.Invoke();
 
@@ -102,11 +116,11 @@ public class WeaponHandler : MonoBehaviour
         }
 
 
-        if (Input.GetKeyDown(KeyCode.Alpha4) && currentThrowable != currentHeld)
+        if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             if (throwables.Count > 0)
             {
-                if (throwables.Count == 1)
+                if (throwables.Count == 1 && currentThrowable != currentHeld)
                 {
                     previousHeld = currentHeld;
                     currentHeld = currentThrowable;
@@ -117,14 +131,20 @@ public class WeaponHandler : MonoBehaviour
                 else
                 {
                     int index = throwables.IndexOf(currentThrowable);
-                    int nextIndex = (index + 1) % throwables.Count;
+                    int nextIndex = (index + 1) % throwables.Count; //wrap around the list
+
+                    if (throwables[nextIndex] == currentThrowable) nextIndex = (nextIndex + 1) % throwables.Count; //prevent switching to same grenade
+
                     currentThrowable = throwables[nextIndex];
                     previousHeld = currentHeld;
                     currentHeld = currentThrowable;
+
                     if (previousHeld != null) previousHeld.SetActive(false);
+
                     currentHeld.SetActive(true);
+
                 }
-                
+
                 OnWeaponSwitched?.Invoke();
             }
         }
@@ -139,7 +159,7 @@ public class WeaponHandler : MonoBehaviour
 
             previousHeld.SetActive(false);
             currentHeld.SetActive(true);
-            
+
             OnWeaponSwitched?.Invoke();
         }
 
@@ -160,12 +180,12 @@ public class WeaponHandler : MonoBehaviour
 
         if (Input.GetMouseButtonDown(1))
         {
-            if (hideCursor &&canClickMouseTwo)
+            if (hideCursor && canClickMouseTwo)
             {
                 ToggleCursorState(true);
                 OnWeaponUseSecondaryStarted?.Invoke();
                 canClickMouseTwo = false;
-                Invoke(nameof(ResetMouseTwo),0.2f);
+                Invoke(nameof(ResetMouseTwo), 0.2f);
             }
 
         }
@@ -191,16 +211,6 @@ public class WeaponHandler : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.G) && currentHeld != knife)
         {
             DropWeapon();
-        }
-
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            ToggleCursorState(false);
-            canRun = false;
-            BuyableMenuController.canRun = true;
-            PlayerMovement.canMove = false;
-            CameraController.canRun = false;
-            OnBuyMenuOpened?.Invoke();
         }
 
     }
@@ -274,6 +284,7 @@ public class WeaponHandler : MonoBehaviour
 
             return true;
         }
+        GameController.DisplayMessage("You cannot carry anymore", 2f);
         return false;
     }
 
@@ -305,13 +316,12 @@ public class WeaponHandler : MonoBehaviour
         {
             ThrowableBase grenadeScript = currentHeld.GetComponent<ThrowableBase>();
 
-            GameObject grenadeInstance = Instantiate(grenadeScript.droppedGrenadePrefab, raycastSource.position, Quaternion.identity);
+            GameObject grenadeInstance = Instantiate(grenadeScript.droppedGrenadePrefab, raycastSource.position - new Vector3(0f, 0.5f, 0f), Quaternion.identity);
             Rigidbody rb = grenadeInstance.GetComponent<Rigidbody>();
+            grenadeInstance.SetActive(true);
 
             rb.AddForce(Vector3.up * 2f, ForceMode.Impulse);
-            rb.AddForce(Camera.main.transform.forward * 20f, ForceMode.Impulse);
-
-            grenadeInstance.SetActive(true);
+            rb.AddForce(Camera.main.transform.forward * 3f, ForceMode.Impulse);
 
             RemoveFromThrowables(currentHeld);
             return;
@@ -379,8 +389,8 @@ public class WeaponHandler : MonoBehaviour
     public static void CloseBuyMenu()
     {
         PlayerMovement.canMove = true;
-        canRun = true;
         CameraController.canRun = true;
+        GameController.gameRunning = true;
         canRun = true;
 
     }
@@ -446,7 +456,7 @@ public class WeaponHandler : MonoBehaviour
     void CreateWeaponInstance(GameObject weapon)
     {
         WeaponLogic parentScript = weapon.GetComponent<WeaponLogic>();
-        GameObject tempObj = Instantiate(parentScript.weaponPrefab, raycastSource.position, Quaternion.identity);
+        GameObject tempObj = Instantiate(parentScript.weaponPrefab, raycastSource.position - new Vector3(0f, 0.5f, 0f), Quaternion.identity);
         Rigidbody rb = tempObj.GetComponent<Rigidbody>();
         tempObj.SetActive(true);
 
@@ -460,7 +470,7 @@ public class WeaponHandler : MonoBehaviour
 
         //Add force
         rb.AddForce(Vector3.up * 2f, ForceMode.Impulse);
-        rb.AddForce(Camera.main.transform.forward * 5f, ForceMode.Impulse);
+        rb.AddForce(Camera.main.transform.forward * 4f, ForceMode.Impulse);
     }
 
     void ResetPrimary()
@@ -476,6 +486,95 @@ public class WeaponHandler : MonoBehaviour
     void ResetMouseTwo()
     {
         canClickMouseTwo = true;
+    }
+
+    public bool CanAddGrenade(GameObject grenade)
+    {
+        Throwable grenadeScript = grenade.GetComponent<Throwable>();
+        Dictionary<ThrowableBase.Type, int> grenadeDictionary = ReturnGrenadeTypeCount(); //Get dictionary with how many of each type is in the list
+        ThrowableBase.Type type = grenadeScript.type;
+        int maxAllowed = 0;
+
+        switch (type)
+        {
+            case ThrowableBase.Type.Fire: maxAllowed = 1; break;
+            case ThrowableBase.Type.Smoke: maxAllowed = 1; break;
+            case ThrowableBase.Type.Flash: maxAllowed = 2; break;
+            case ThrowableBase.Type.HE: maxAllowed = 1; break;
+            case ThrowableBase.Type.Decoy: maxAllowed = 2; break;
+
+        }
+        if (grenadeDictionary[grenadeScript.type] < maxAllowed)
+            return true;
+        else return false;
+    }
+
+    private Dictionary<ThrowableBase.Type, int> ReturnGrenadeTypeCount()
+    {
+        var grenadeList = GetAllGrenadesEnumerable();
+        Dictionary<ThrowableBase.Type, int> dictionary = new Dictionary<ThrowableBase.Type, int>()
+        {
+            {ThrowableBase.Type.Fire,0},
+            {ThrowableBase.Type.Smoke,0},
+            {ThrowableBase.Type.Flash,0},
+            {ThrowableBase.Type.Decoy,0},
+            {ThrowableBase.Type.HE,0}
+        };  //make preset dictionary to add count to
+
+
+        foreach (GameObject grenade in grenadeList)
+        {
+            ThrowableBase.Type type = grenade.GetComponent<ThrowableBase>().type;
+
+            dictionary[type] = dictionary[type] + 1;   //increment counter by 1
+        }
+
+        return dictionary;
+
+    }
+
+    private IEnumerable<GameObject> GetAllGrenadesEnumerable()
+    {
+        return throwables;
+    }
+
+    public void InBuyZone(GameController.Team team)
+    {
+        if (team == GameController.playerTeam) inBuyZone = true;
+    }
+
+    public void OutOfBuyZone(GameController.Team team)
+    {
+        if (team == GameController.playerTeam) inBuyZone = false;
+
+    }
+
+
+    public void ResetWeapons(GameController.Team team)
+    {
+        primaryWeapon?.SetActive(false);
+        primaryWeapon = null;
+        secondaryWeapon.SetActive(false);
+
+        if (team == GameController.Team.CT) secondaryWeapon = uspInstance;
+        else secondaryWeapon = glockInstance;
+
+        currentHeld = secondaryWeapon;
+        previousHeld = knife;
+
+        currentHeld.SetActive(true);
+
+        if (hideCursor)
+            ToggleCursorState(true);    
+        
+        
+        }
+
+    public void ResetWeaponAmmo()
+    {
+        if (primaryWeapon != null) primaryWeapon.GetComponent<WeaponLogic>().RefreshBulletData();
+        if (secondaryWeapon != null) secondaryWeapon.GetComponent<WeaponLogic>().RefreshBulletData();
+
     }
 
 }

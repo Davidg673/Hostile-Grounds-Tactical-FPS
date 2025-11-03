@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: c732e7766ee963d4d8b832e0176ee6c7
+timeCreated: 1551408180
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/FSM/Decisions/HearDecision.asset
+  uploadId: 635717

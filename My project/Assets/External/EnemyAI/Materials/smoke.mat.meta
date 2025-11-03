@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 2fc7f2739da42094ba464d76038dd0ca
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 163967
+  packageName: Enemy AI
+  packageVersion: 1.0.2
+  assetPath: Assets/External/EnemyAI/Materials/smoke.mat
+  uploadId: 635717

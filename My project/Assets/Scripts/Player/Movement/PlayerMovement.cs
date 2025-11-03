@@ -32,6 +32,25 @@ public class PlayerMovement : MonoBehaviour
     public bool isSlowWalking;
 
 
+    [Header("SFX")]
+    [SerializeField] private AudioSource sfxSource;
+    [SerializeField] private AudioSource sfxSourceFootsteps;
+    [SerializeField] private AudioClip footstepSand;
+    [SerializeField] private AudioClip footstepConcrete;
+    [SerializeField] private AudioClip footstepMetal;
+    [SerializeField] private AudioClip footstepWood;
+
+    private AudioClip currentLandClip;
+    [SerializeField] private AudioClip landClipSand;
+    [SerializeField] private AudioClip landClipConcrete;
+    [SerializeField] private AudioClip landClipMetal;
+    [SerializeField] private AudioClip landClipWood;
+
+    bool playSoundOnce = true;
+    private Coroutine CheckMaterialRoutine;
+
+
+
     void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -43,7 +62,11 @@ public class PlayerMovement : MonoBehaviour
     }
 
     void Update()
-    {   
+    {
+
+        //Update ground material
+        if (CheckMaterialRoutine == null) CheckMaterialRoutine = StartCoroutine(CheckGroundMaterial());
+
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
 
@@ -55,10 +78,16 @@ public class PlayerMovement : MonoBehaviour
 
             currentSpeedMode = isSlowWalking || jumpSlow ? slowWalkSpeed : normalWalkSpeed;  //slow down character based on Shift pressed or landing
             currentSpeedMode = isSuperSlowWalking ? slowestSpeed : currentSpeedMode; // if both control and shift are pressed, choose slowest speed
-            currentSpeedMode = Input.GetKey(KeyCode.LeftControl) ? crouchSpeed : currentSpeedMode; 
+            currentSpeedMode = Input.GetKey(KeyCode.LeftControl) ? crouchSpeed : currentSpeedMode;
 
             if (jumped) //if landed from a jump
             {
+                sfxSource.PlayOneShot(currentLandClip);
+                playSoundOnce = false;
+                sfxSourceFootsteps.Stop();
+                Invoke(nameof(ResetLandCooldown), 0.8f);
+
+
                 jumped = false;
                 jumpSlow = true;
 
@@ -73,8 +102,16 @@ public class PlayerMovement : MonoBehaviour
 
 
         }
-        float inputX = canMove ? Input.GetAxis("Vertical") : 0;
-        float inputY = canMove ? Input.GetAxis("Horizontal") : 0;
+
+        float inputX = 0f;
+        float inputY = 0f;
+
+        if (GameController.gameRunning && canMove)
+        {
+            inputX = canMove ? Input.GetAxis("Vertical") : 0;
+            inputY = canMove ? Input.GetAxis("Horizontal") : 0;
+
+        }
 
         Vector3 move = (forward * inputX) + (right * inputY);
 
@@ -82,17 +119,27 @@ public class PlayerMovement : MonoBehaviour
         {
             move.Normalize();
             normalizedSpeed = move.magnitude;
-
         }
 
+        ///Handle Footstep sound
+        if (move.magnitude> 0.7 && playSoundOnce && characterController.isGrounded && !isSlowWalking && !isCrouched)
+        {
+            sfxSourceFootsteps.Play();
+            playSoundOnce = false;
 
+        }
+        else if (move.magnitude<0.7 || !characterController.isGrounded || isCrouched || isSlowWalking)
+        {
+            sfxSourceFootsteps.Stop();
+            playSoundOnce = true;
+        }
 
         float movementDirectionY = moveDirection.y;
         moveDirection = move * adjustedSpeed;
 
 
 
-        if (Input.GetButton("Jump") && canMove && characterController.isGrounded)
+        if (Input.GetButton("Jump") && canMove && characterController.isGrounded && GameController.gameRunning)
         {
             jumped = true;
             moveDirection.y = jumpPower;
@@ -151,5 +198,54 @@ public class PlayerMovement : MonoBehaviour
         jumpSlow = false;
     }
 
+    private IEnumerator CheckGroundMaterial()
+    {
+        RaycastHit hit;
+        float newPitch = 1.5f;
+
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, 10f))
+        {
+
+            if (hit.collider.gameObject.tag == "Sand")
+            {
+                sfxSourceFootsteps.clip = footstepSand;
+                newPitch = 1.8f;
+                currentLandClip = landClipSand;
+            }
+            if (hit.collider.gameObject.tag == "Concrete")
+            {
+                sfxSourceFootsteps.clip = footstepConcrete;
+                newPitch = 1.3f;
+                currentLandClip = landClipConcrete;
+
+            }
+            if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Wood"))
+            {
+                sfxSourceFootsteps.clip = footstepWood;
+                newPitch = 1.8f;
+                currentLandClip = landClipWood;
+            }
+            if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Metal"))
+            {
+                sfxSourceFootsteps.clip = footstepWood;
+                newPitch = 1.8f;
+                currentLandClip = landClipMetal;
+            }
+        }
+
+        if (sfxSourceFootsteps.pitch != newPitch)
+        {
+            playSoundOnce = true;
+            sfxSourceFootsteps.pitch = newPitch;
+        }
+
+        yield return new WaitForSeconds(0.5f);
+        CheckMaterialRoutine = null;
+    }
+
+    private void ResetLandCooldown()
+    {
+        playSoundOnce = true;
+    }
 
 }
