@@ -49,11 +49,6 @@ public class GrenadeEffect : MonoBehaviour
         StartCoroutine(Countdown());
     }
 
-    void Update()
-    {
-
-    }
-
     private void PlayEffect()
     {
         switch (type)

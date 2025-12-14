@@ -28,6 +28,9 @@ public class DamageIndicatorSystem : MonoBehaviour
     {
         CreateIndicator -= Create;
         CheckObjectInSight -= Insight;
+
+        CreateIndicator = delegate {};
+        CheckObjectInSight= null;
     }
     
     void Create(Transform target)

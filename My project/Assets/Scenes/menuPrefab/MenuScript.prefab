@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7630341898584689979
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 110930448181530995}
+  - component: {fileID: 7804859595423589527}
+  m_Layer: 0
+  m_Name: MenuScript
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &110930448181530995
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7630341898584689979}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 13.907993, y: 30.3423, z: -105.52266}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7804859595423589527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7630341898584689979}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26a0451ec0391a9419bfaaaf42d67737, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverSound: {fileID: 0}
+  clickSound: {fileID: 0}
+  settingsMenu: {fileID: 0}
+  startNewGameMenu: {fileID: 0}
+  mainMenu: {fileID: 0}
+  loadingMenu: {fileID: 0}
+  loadingBar: {fileID: 0}
+  waitForInput: 0
+  loadPromptText: {fileID: 0}
+  userPromptKey: 0
+  mapDropdown: {fileID: 0}
+  teamDropdown: {fileID: 0}
+  numBotsSlider: {fileID: 0}
+  roundTimeSlider: {fileID: 0}
+  numRoundsSlider: {fileID: 0}
+  startMoneySlider: {fileID: 0}
+  playerNameInput: {fileID: 0}
+  crosshairSizeDropdown: {fileID: 0}
+  crosshairColourDropdown: {fileID: 0}
+  playerSensitivitySlider: {fileID: 0}
+  resolutionDropdown: {fileID: 0}
+  windowedModeToggle: {fileID: 0}
+  soundEffectsSlider: {fileID: 0}
+  brightnessSlider: {fileID: 0}
+  gammaSlider: {fileID: 0}
+  moveForwardInput: {fileID: 0}
+  moveBackInput: {fileID: 0}
+  moveLeftInput: {fileID: 0}
+  moveRightInput: {fileID: 0}
+  walkInput: {fileID: 0}
+  jumpInput: {fileID: 0}
+  crouchInput: {fileID: 0}
+  chatMessageInput: {fileID: 0}
+  buyMenuInput: {fileID: 0}
+  fireInput: {fileID: 0}
+  reloadInput: {fileID: 0}
+  lastWeaponUsedInput: {fileID: 0}
+  dropWeaponInput: {fileID: 0}

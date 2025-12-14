@@ -62,6 +62,18 @@ public class PlayerHealth : HealthManager
 
         if (!DamageIndicatorSystem.CheckObjectInSight(origin.transform)) DamageIndicatorSystem.CreateIndicator(origin.transform);
 
+        if (health < 0)
+        {
+            ScoreboardAgent agent = GetComponent<ScoreboardAgent>();
+            agent.CallbackScoreboard(0, 1, 0, 0);
+            ScoreboardAgent enemyAgent = origin.GetComponent<ScoreboardAgent>();
+            if (enemyAgent == null) enemyAgent = origin.GetComponentInParent<ScoreboardAgent>();
+            enemyAgent.CallbackScoreboard(enemyAgent.id, 0, 1, 500);
+            dead = true;
+            health = 0;
+            HandlePlayerDeath();
+        }
+
     }
 
 
@@ -69,13 +81,13 @@ public class PlayerHealth : HealthManager
     {
         CheckForFallDamage();
 
-        if (health < 0 || Input.GetKeyDown(KeyCode.E))
+        if (health < 0 && !dead)
         {
             dead = true;
             health = 0;
             HandlePlayerDeath();
         }
-        else
+        else if (health>0)
         {
             dead = false;
         }
@@ -105,6 +117,12 @@ public class PlayerHealth : HealthManager
             else if (highestDiff > cameraTiltTreshold) cameraController.TiltCamera(5f, 5f);
 
             highestDiff = 0f;
+        }
+
+        if (health < 0)
+        {
+            ScoreboardAgent agent = GetComponent<ScoreboardAgent>();
+            agent.CallbackScoreboard(0, 1, 0, 0);
         }
     }
 

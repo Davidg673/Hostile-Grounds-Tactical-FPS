@@ -178,7 +178,7 @@ namespace EnemyAI
 			// Reset blocked sight test on current game loop iteration.
 			checkedOnLoop = false;
 			// Do not execute FSM if AI is not active.
-			if (!GameController.gameRunning)
+			if (!GameController.AIRunning)
 				return;
 			// Execute current FSM state actions.
 			currentState.DoActions(this);

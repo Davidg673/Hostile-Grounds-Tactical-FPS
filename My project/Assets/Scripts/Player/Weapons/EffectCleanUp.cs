@@ -34,7 +34,6 @@ public class EffectCleanUp : MonoBehaviour
 			}            
         }
 
-
 		if (!hasTimedCleanUp)
 		{
 			if (effectsQueue.Count > numEffectsTotal)
@@ -56,8 +55,13 @@ public class EffectCleanUp : MonoBehaviour
 		}
 
 	}
-    
-	IEnumerator CheckIfPlaying()
+
+    void OnDisable()
+    {
+        effectsQueue.Clear();
+    }
+
+    IEnumerator CheckIfPlaying()
     {
         yield return new WaitForSeconds(0.1f);
         while (ps.isPlaying && !ps.main.loop)

@@ -20,6 +20,8 @@ public class GameController : MonoBehaviour
     private float timeToSecond;
 
     public static bool gameRunning;
+    public static bool AIRunning;
+    public static string playerName="player";
 
 
     public static List<GameObject> activeCT = new List<GameObject>();
@@ -33,8 +35,8 @@ public class GameController : MonoBehaviour
     public List<GameObject> allEntities = new List<GameObject>();
     public List<GameObject> scoreboardAgents = new List<GameObject>();
 
-    private int CTtoSpawn = 1;  // how many bots to spawn on each side
-    private int TtoSpawn = 2;
+    private int CTtoSpawn = 5;  // how many bots to spawn on each side
+    private int TtoSpawn = 5;
 
     public static Team playerTeam;
 
@@ -71,19 +73,23 @@ public class GameController : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-
         }
-        else
-        {
-            Destroy(gameObject);
-        }
-
+ 
         Camera.main.enabled = true;
         playerUIScript = player.GetComponent<PlayerUI>();
-        StartGame(Team.T);
+        StartGame();
     }
 
 
+    void OnDisable()
+    {
+        Instance=null;
+        gameRunning=false;
+        AIRunning=false;
+        activeCT.Clear();
+        activeT.Clear();
+        PlayerHealth.OnPlayerDead -= HandlePlayerDeath;
+    }
 
     void Update()
     {
@@ -132,13 +138,13 @@ public class GameController : MonoBehaviour
     }
 
 
-    private void StartGame(Team team)
+    private void StartGame()
     {
-        playerTeam = team;
         WeaponHandler weaponHandlerScript = player.GetComponent<WeaponHandler>();
         weaponHandlerScript.ResetWeapons(playerTeam);
-        playerUIScript.money = 6000;
         PlayerHealth.OnPlayerDead += HandlePlayerDeath;
+
+        LoadSavedData();
 
         if (playerTeam == Team.CT) ScoreboardManager.GlobalAddElement(Team.CT);
         else ScoreboardManager.GlobalAddElement(Team.T);
@@ -166,6 +172,7 @@ public class GameController : MonoBehaviour
 
         CameraController.canRun = false;
         gameRunning = false;
+        AIRunning=false;
         PlayerMovement.canMove = false;
         cameraObj.transform.position += new Vector3(0f,2f,0f);
         cameraObj.transform.rotation = Quaternion.identity;
@@ -178,6 +185,7 @@ public class GameController : MonoBehaviour
     {
         buyPhase = true;
         gameRunning = false;
+        AIRunning=false;
         seconds = 5;
         minutes = 0;
 
@@ -212,14 +220,9 @@ public class GameController : MonoBehaviour
         Invoke(nameof(SetRunning), 5f);
     }
 
-    public void StartNewMatch()
-    {
-
-    }
-
     public void QuitToMenu()
     {
-        Application.Quit();
+        MenuManager.LoadScene("Main Menu");
     }
 
     void UpdateTimer()
@@ -372,6 +375,7 @@ public class GameController : MonoBehaviour
         if (activeCT.Count == 0)
         {
             gameRunning = false;
+            AIRunning=false;
             DisplayMessage("Terrorists have won!", 5f);
             if (playerTeam == Team.CT) playerUIScript.money += 1400;
             if (playerTeam == Team.T) playerUIScript.money += 3250;
@@ -382,6 +386,7 @@ public class GameController : MonoBehaviour
         else if (activeT.Count == 0)
         {
             gameRunning = false;
+            AIRunning=false;
             DisplayMessage("Counter Terrorists have won!", 5f);
             if (playerTeam == Team.CT) playerUIScript.money += 3250;
             if (playerTeam == Team.T) playerUIScript.money += 1400;
@@ -395,6 +400,7 @@ public class GameController : MonoBehaviour
     {
         DisplayMessage("Round has begun", 3f);
         gameRunning = true;
+        AIRunning=true;
     }
 
     void HandlePlayerDeath()
@@ -407,4 +413,16 @@ public class GameController : MonoBehaviour
         EndRound();
     }
 
+    void LoadSavedData()
+    {
+        playerTeam= PlayerPrefs.GetString("team").Equals("Counter Terrorists") ? Team.CT : Team.T;
+        playerUIScript.money= (int) PlayerPrefs.GetFloat("startMoney");
+        CTtoSpawn = (int) PlayerPrefs.GetFloat("numBots");
+        TtoSpawn = (int) PlayerPrefs.GetFloat("numBots");
+        roundMinutes= (int) PlayerPrefs.GetFloat("roundTime");
+        roundsLeft = (int) PlayerPrefs.GetFloat("numRounds");
+        playerName = PlayerPrefs.GetString("playerName");
+        
+        if (TtoSpawn <=0 && CTtoSpawn <=0) playWithBots=false;
+    }
 }

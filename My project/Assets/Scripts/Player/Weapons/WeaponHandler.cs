@@ -3,7 +3,6 @@ using UnityEngine;
 using UnityEngine.Events;
 public class WeaponHandler : MonoBehaviour
 {
-    public UnityAction onJumpPressed;
     [HideInInspector] public bool weaponUseHold;
     [HideInInspector] public bool weaponSecondaryUseHold;
     public List<GameObject> throwables = new List<GameObject>();
@@ -34,6 +33,29 @@ public class WeaponHandler : MonoBehaviour
     [SerializeField] GameObject uspInstance;
     [SerializeField] GameObject glockInstance;
 
+    //Keybinds
+    KeyCode buyMenuKey = KeyCode.B;
+    KeyCode fireKey = KeyCode.Mouse1;
+    KeyCode reloadKey = KeyCode.R;
+    KeyCode swithKey = KeyCode.Q;
+    KeyCode dropKey = KeyCode.G;
+
+
+    void Start()
+    {
+        LoadDataFromSaved();
+
+        MenuManager.onChangeData+=LoadDataFromSaved;
+    }
+
+    void OnDestroy()
+    {
+        MenuManager.onChangeData-=LoadDataFromSaved;
+        canRun=true;
+        buyTimeout=false;
+        inBuyZone=false;
+    }
+
     void Update()
     {
         HandleInput();
@@ -42,10 +64,10 @@ public class WeaponHandler : MonoBehaviour
     void HandleInput()
     {
 
-        if (Input.GetKeyDown(KeyCode.B))
+        if (Input.GetKeyDown(buyMenuKey))
         {
 
-            if (!buyTimeout && inBuyZone)
+            if (!buyTimeout && inBuyZone && !MenuManager.running)
             {
                 ToggleCursorState(false);
                 canRun = false;
@@ -64,11 +86,6 @@ public class WeaponHandler : MonoBehaviour
                 GameController.DisplayMessage("You need to be in a buy zone!", 2f);
             }
         }
-
-        if (!GameController.gameRunning || !canRun) return;
-
-        if (Input.GetKeyDown(KeyCode.Space)) onJumpPressed?.Invoke();
-
 
         if (Input.GetKeyDown(KeyCode.Alpha1) && primaryWeapon != null)
         {
@@ -150,7 +167,7 @@ public class WeaponHandler : MonoBehaviour
         }
 
 
-        if (Input.GetKeyDown(KeyCode.Q) && previousHeld != null)
+        if (Input.GetKeyDown(swithKey) && previousHeld != null)
         {
             GameObject tempHolder = previousHeld;
             previousHeld = currentHeld;
@@ -163,11 +180,12 @@ public class WeaponHandler : MonoBehaviour
             OnWeaponSwitched?.Invoke();
         }
 
+        if (!GameController.gameRunning || !canRun || MenuManager.running) return;
 
-        weaponUseHold = Input.GetMouseButton(0);
+        weaponUseHold = Input.GetKeyDown(fireKey);
         weaponSecondaryUseHold = Input.GetMouseButton(1);
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetKeyDown(fireKey))
         {
             if (hideCursor)
             {
@@ -190,25 +208,14 @@ public class WeaponHandler : MonoBehaviour
 
         }
 
-        if (Input.GetMouseButtonUp(1)) OnWeaponUseSecondaryFinished?.Invoke();
 
         if (Input.GetMouseButtonUp(0)) OnWeaponUseFinished?.Invoke();
 
-        if (Input.GetKeyDown(KeyCode.R)) OnWeaponReloadPressed?.Invoke();
+        if (Input.GetKeyDown(reloadKey)) OnWeaponReloadPressed?.Invoke();
 
         if (Input.GetKeyDown(KeyCode.F)) OnWeaponInspectPressed?.Invoke();
 
-        if (Input.GetAxisRaw("Mouse ScrollWheel") > 0f)
-        {
-            // TODO: Implement Scroll menu behaviour up
-        }
-        else if (Input.GetAxisRaw("Mouse ScrollWheel") < 0f)
-        {
-            // TODO: Implement Scroll menu behaviour down
-        }
-
-        //Handle weapon drop
-        if (Input.GetKeyDown(KeyCode.G) && currentHeld != knife)
+        if (Input.GetKeyDown(dropKey) && currentHeld != knife)
         {
             DropWeapon();
         }
@@ -297,14 +304,23 @@ public class WeaponHandler : MonoBehaviour
             tempScript.currentBulletsInMag = currentBulletsInMag;
             tempScript.currentBulletsInStock = currentBulletsInStock;
 
-            if (primaryWeapon == null) primaryWeapon = parentObj;
-            else secondaryWeapon = parentObj;
+            if (tempScript.weaponType == WeaponLogic.Type.Primary)
+            {
+                if (primaryWeapon == null) primaryWeapon = parentObj;
+                else return false;
+            }
+            else
+            {
+                if (secondaryWeapon == null) secondaryWeapon = parentObj;
+                else return false;
+            }
+
 
             previousHeld = currentHeld;
             currentHeld = parentObj;
             if (previousHeld != null) previousHeld.SetActive(false);
-
             parentObj.SetActive(true);
+            
             return true;
         }
         return false;
@@ -562,12 +578,10 @@ public class WeaponHandler : MonoBehaviour
         currentHeld = secondaryWeapon;
         previousHeld = knife;
 
-        currentHeld.SetActive(true);
+        if (currentHeld!=null) currentHeld.SetActive(true);
 
         if (hideCursor)
             ToggleCursorState(true);    
-        
-        
         }
 
     public void ResetWeaponAmmo()
@@ -577,4 +591,12 @@ public class WeaponHandler : MonoBehaviour
 
     }
 
+    private void LoadDataFromSaved()
+    {
+        buyMenuKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("buyMenu"));
+        fireKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("fire"));
+        reloadKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("reload"));
+        swithKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("lastWeaponUsed"));
+        dropKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("dropWeapon"));
+    }
 }

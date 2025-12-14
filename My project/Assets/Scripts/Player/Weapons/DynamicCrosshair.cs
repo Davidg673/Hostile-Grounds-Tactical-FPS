@@ -10,7 +10,9 @@ public class DynamicCrosshair : MonoBehaviour
     public GameObject crosshairObj;
 
     [Header("Crosshair Settings")]
+    private float sizeBase=10f;
     public float size = 10f;
+    private float gapBase=5f;
     public float gap = 5f;
     public float dynamicGap;
     public float thickness = 2f;
@@ -21,10 +23,18 @@ public class DynamicCrosshair : MonoBehaviour
 
     private Vector2 originalTopPos, originalBottomPos, originalLeftPos, originalRightPos;
 
+    void Awake()
+    {
+        instance = this;
+    }
 
     void Start()
     {
-        instance = this;
+        LoadDataFromSaved();
+
+        gap=gapBase;
+        size=sizeBase;
+
         dynamicGap = gap;
         foreach (var arm in new[] { top, bottom, left, right })
         {
@@ -33,6 +43,15 @@ public class DynamicCrosshair : MonoBehaviour
         }
 
         UpdateCrosshairLayout();
+
+        MenuManager.onChangeData+=LoadDataFromSaved;
+    }
+
+    void OnDestroy()
+    {
+        instance=null;
+
+        MenuManager.onChangeData-=LoadDataFromSaved;
     }
 
     void Update()
@@ -76,5 +95,58 @@ public class DynamicCrosshair : MonoBehaviour
     public void Enable()
     {
         crosshairObj.SetActive(true);
+    }
+
+    private void LoadDataFromSaved()
+    {
+        string crosshairSize = PlayerPrefs.GetString("crosshairSize");
+        string crosshairColour = PlayerPrefs.GetString("crosshairColour");
+
+        switch (crosshairSize)
+        {
+            case "Small":
+                size=sizeBase;
+                gap=gapBase;
+                break;
+            
+            case "Medium":
+                size=sizeBase+ 2;
+                gap = gapBase + 4;
+                break;
+
+            case "Large":
+                size=sizeBase+ 4;
+                gap = gapBase + 8;
+                break;
+        }
+
+        switch (crosshairColour)
+        {
+            case "Green":
+                color= Color.green;
+                break;
+            
+            case "Red":
+                color = Color.red;
+                break;
+
+            case "Blue":
+                color = Color.blue;
+                break;
+            
+            case "Light blue":
+                color = Color.cyan;
+                break;        
+           
+            case "Yellow":
+                color = Color.yellow;
+                break;
+        }
+
+        foreach (var arm in new[] { top, bottom, left, right })
+        {
+            var img = arm.GetComponent<Image>();
+            if (img) img.color = color;
+        }
     }
 }

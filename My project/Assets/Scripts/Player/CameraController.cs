@@ -26,6 +26,15 @@ public class CameraController : MonoBehaviour
         characterController = GetComponentInParent<CharacterController>();
         basePosition = transform.localPosition;
         baseLookSpeedY = lookSpeedY;
+
+        MenuManager.onChangeData+=LoadDataFromSaved;
+    }
+
+    void OnDestroy()
+    {
+        canRun=true;
+
+        MenuManager.onChangeData-=LoadDataFromSaved;
     }
 
     void Update()
@@ -111,6 +120,12 @@ public class CameraController : MonoBehaviour
     public void TiltCamera(float rotationForce, float randomFactor)
     {
         targetRotation += new Vector3(0f, 0f, rotationForce * Random.Range(-randomFactor, randomFactor));
+    }
+
+    private void LoadDataFromSaved()
+    {
+        baseLookSpeedY= PlayerPrefs.GetFloat("sensitivity");
+        lookSpeedY=baseLookSpeedY;
     }
 
 }

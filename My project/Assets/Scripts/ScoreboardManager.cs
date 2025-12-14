@@ -15,7 +15,6 @@ public class ScoreboardManager : MonoBehaviour
     public TMP_Text CTSideCount;
     private int currentCTCount;
     private int currentTCount;
-
     public List<string> namesList = new List<string>
     {
         "Alpha",
@@ -52,7 +51,12 @@ public class ScoreboardManager : MonoBehaviour
     {
         Instance = this;
         OnScoreboardChange += ChangeScoreboard;
+    }
 
+    void OnDisable()
+    {
+        Instance = null;
+        OnScoreboardChange -= ChangeScoreboard;
     }
 
     void Update()

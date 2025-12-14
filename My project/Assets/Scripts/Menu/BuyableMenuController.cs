@@ -51,6 +51,11 @@ public class BuyableMenuController : MonoBehaviour
 
     }
 
+    void OnDisable()
+    {
+        canRun=false;
+        WeaponHandler.OnBuyMenuOpened-= OpenMenu;
+    }
 
     void Update()
     {
@@ -59,8 +64,10 @@ public class BuyableMenuController : MonoBehaviour
 
     void OpenMenu()
     {
+        canRun = false;
         menuCanvas.SetActive(true);
         secondMenuCanvas.SetActive(true);
+        Invoke(nameof(StartRun), 0.2f);
 
         SetButtonStates();
     }
@@ -104,7 +111,6 @@ public class BuyableMenuController : MonoBehaviour
 
         }
 
-        if (pressedButton = null) return;
 
         //if Input is number 1,2,3..., find the button in the children objects of the first panel with the corresponding name.
         if (Input.GetKeyDown(KeyCode.Alpha1)) pressedButton = activePanel.GetComponentsInChildren<Button>(false).FirstOrDefault(b => b.name == "1");
@@ -115,7 +121,6 @@ public class BuyableMenuController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha6)) pressedButton = activePanel.GetComponentsInChildren<Button>(false).FirstOrDefault(b => b.name == "6");
         if (Input.GetKeyDown(KeyCode.Escape)) pressedButton = activePanel.GetComponentsInChildren<Button>(false).FirstOrDefault(b => b.name == "Esc");
         if (Input.GetKeyDown(KeyCode.B)) pressedButton = activePanel.GetComponentsInChildren<Button>(false).FirstOrDefault(b => b.name == "B");
-
 
         if (pressedButton != null && pressedButton.interactable)
             pressedButton?.onClick.Invoke();
@@ -187,7 +192,10 @@ public class BuyableMenuController : MonoBehaviour
         clickClip.GetComponent<AudioSource>().Play();
     }
     
-
+    void StartRun()
+    {
+        canRun = true;
+    }
     private void SetButtonStates()
     {
         int playerBalance = UIScript.money;

@@ -12,8 +12,6 @@ public class ScoreboardElement : MonoBehaviour
     public TMP_Text killsText;
     public TMP_Text deathsText;
 
-    public UnityAction<int, int, int> changeInfo;
-
     private int totalDeaths=0;
     private int totalKills=0;
     private int totalMoney=500;
@@ -24,7 +22,7 @@ public class ScoreboardElement : MonoBehaviour
     {
         id = elementCount;
         elementCount++;
-        if (id == 0) nameText.text = "player";
+        if (id == 0) nameText.text = GameController.playerName;
         else nameText.text = name;
         moneyText.text = totalMoney.ToString();   
         killsText.text = totalKills.ToString();        

@@ -9,6 +9,10 @@ public class ResetWeaponPanels : MonoBehaviour
         BuyableMenuController.OnResetWeaponPanels += ResetPanels;
     }
 
+    void OnDisable()
+    {
+        BuyableMenuController.OnResetWeaponPanels -= ResetPanels;
+    }
     public void ResetPanels()
     {
         defaultPanel.SetActive(true);

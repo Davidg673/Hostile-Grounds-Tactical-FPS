@@ -87,6 +87,7 @@ namespace EnemyAI
 					if (origin == player)
 						PlayerUI.AddToMoney(500);
 					ScoreboardAgent originAgent = origin.GetComponentInParent<ScoreboardAgent>();
+					if (originAgent == null) originAgent = origin.GetComponent<ScoreboardAgent>();
 					originAgent.CallbackScoreboard(originAgent.id, 0, 1, 500);
 					ScoreboardAgent objectAgent = GetComponent<ScoreboardAgent>();
 					objectAgent.CallbackScoreboard(objectAgent.id, 1, 0, 0);

@@ -372,8 +372,6 @@ public class WeaponLogic : MonoBehaviour
         direction = originalDirection;
         spreadControlStatic = spreadControl;
         recoilControlStatic = recoilControl;
-
-
     }
 
 

@@ -33,12 +33,12 @@ public class PlayerUI : MonoBehaviour
         {
             Instance = this;
         }
-        else
-        {
-            Destroy(gameObject);
-        }
     }
 
+    void OnDestroy()
+    {
+        Instance=null;
+    }
 
     void Update()
     {

@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerMovement : MonoBehaviour
@@ -14,7 +15,6 @@ public class PlayerMovement : MonoBehaviour
     public float gravity;
     public float lookSpeedX = 2f;
     public float baseLookSpeedX = 2f;
-
     public float defaultHeight = 2f;
     public float crouchHeight = 1f;
     public float crouchSpeed = 1f;
@@ -23,7 +23,7 @@ public class PlayerMovement : MonoBehaviour
     private bool jumpSlow = false; //slow down character when landing
 
     private Vector3 moveDirection = Vector3.zero;
-     private CharacterController characterController;
+    private CharacterController characterController;
 
     public static bool canMove = true;
 
@@ -49,6 +49,16 @@ public class PlayerMovement : MonoBehaviour
     bool playSoundOnce = true;
     private Coroutine CheckMaterialRoutine;
 
+    //Keybinds
+    private KeyCode forwardKey = KeyCode.W;
+    private KeyCode backKey = KeyCode.S;
+    private KeyCode leftKey = KeyCode.A;
+    private KeyCode rightKey = KeyCode.D;
+    private KeyCode walkKey = KeyCode.LeftShift;
+    private KeyCode jumpKey = KeyCode.Space;
+    private KeyCode crouchKey = KeyCode.LeftControl;
+
+
 
 
     void Start()
@@ -58,7 +68,18 @@ public class PlayerMovement : MonoBehaviour
         Cursor.visible = false;
         currentSpeedMode = normalWalkSpeed;
         adjustedSpeed = normalWalkSpeed;
-        baseLookSpeedX = lookSpeedX;
+        lookSpeedX = baseLookSpeedX;
+
+        LoadDataFromSaved();
+        
+        MenuManager.onChangeData+=LoadDataFromSaved;
+    }
+
+    void OnDisable()
+    {
+        canMove=true;
+        
+        MenuManager.onChangeData-=LoadDataFromSaved;
     }
 
     void Update()
@@ -70,15 +91,15 @@ public class PlayerMovement : MonoBehaviour
         Vector3 forward = transform.TransformDirection(Vector3.forward);
         Vector3 right = transform.TransformDirection(Vector3.right);
 
-        isSlowWalking = Input.GetKey(KeyCode.LeftShift);
-        bool isSuperSlowWalking = Input.GetKey(KeyCode.LeftShift) && Input.GetKey(KeyCode.LeftControl);
+        isSlowWalking = Input.GetKey(walkKey);
+        bool isSuperSlowWalking = Input.GetKey(walkKey) && Input.GetKey(crouchKey);
 
         if (characterController.isGrounded) //make sure speed is not changed mid air
         {
 
             currentSpeedMode = isSlowWalking || jumpSlow ? slowWalkSpeed : normalWalkSpeed;  //slow down character based on Shift pressed or landing
             currentSpeedMode = isSuperSlowWalking ? slowestSpeed : currentSpeedMode; // if both control and shift are pressed, choose slowest speed
-            currentSpeedMode = Input.GetKey(KeyCode.LeftControl) ? crouchSpeed : currentSpeedMode;
+            currentSpeedMode = Input.GetKey(crouchKey) ? crouchSpeed : currentSpeedMode;
 
             if (jumped) //if landed from a jump
             {
@@ -108,9 +129,11 @@ public class PlayerMovement : MonoBehaviour
 
         if (GameController.gameRunning && canMove)
         {
-            inputX = canMove ? Input.GetAxis("Vertical") : 0;
-            inputY = canMove ? Input.GetAxis("Horizontal") : 0;
+            if (Input.GetKey(forwardKey)) inputX = 1f;
+            else if (Input.GetKey(backKey)) inputX = -1f;
 
+            if (Input.GetKey(rightKey)) inputY = 1f;
+            else if (Input.GetKey(leftKey)) inputY = -1f;
         }
 
         Vector3 move = (forward * inputX) + (right * inputY);
@@ -139,7 +162,7 @@ public class PlayerMovement : MonoBehaviour
 
 
 
-        if (Input.GetButton("Jump") && canMove && characterController.isGrounded && GameController.gameRunning)
+        if (Input.GetKey(jumpKey) && canMove && characterController.isGrounded && GameController.gameRunning)
         {
             jumped = true;
             moveDirection.y = jumpPower;
@@ -154,12 +177,10 @@ public class PlayerMovement : MonoBehaviour
             moveDirection.y -= gravity * Time.deltaTime;
         }
 
-        if (Input.GetKey(KeyCode.LeftControl) && canMove)
+        if (Input.GetKey(crouchKey) && canMove)
         {
             isCrouched = true;
             characterController.height = crouchHeight;
-            //TODO: Smoothing to be added
-
         }
         else
         {
@@ -246,6 +267,20 @@ public class PlayerMovement : MonoBehaviour
     private void ResetLandCooldown()
     {
         playSoundOnce = true;
+    }
+
+    private void LoadDataFromSaved()
+    {
+        forwardKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("moveForward"));
+        backKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("moveBack"));
+        leftKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("moveLeft"));
+        rightKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("moveRight"));
+        walkKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("walk"));
+        jumpKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("jump"));
+        crouchKey= (KeyCode) System.Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("crouch"));
+
+        baseLookSpeedX= PlayerPrefs.GetFloat("sensitivity");
+        lookSpeedX=baseLookSpeedX;
     }
 
 }
