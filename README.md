@@ -40,10 +40,14 @@ Developed as a final-year dissertation project for a BSc (Hons) Computer Science
 ## Gameplay showcase
 
 - Map overview:  
-  ![Map](screenshots/map.gif)
+<p align="center">
+  <img src="screenshots/map.gif" width="720">
+</p>
 
 - Weapons:  
-  ![weapons](screenshots/weapons.png)
+<p align="center">
+  <img src="screenshots/weapons.JPG" width="720">
+</p>
 
 - Weapon recoil:  
   ![recoil](screenshots/recoil.gif)
