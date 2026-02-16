@@ -155,7 +155,7 @@ public class BuyableMenuController : MonoBehaviour
         
         //Deduct cost of weapon from player balance
         WeaponLogic weaponScript = weapon.GetComponent<WeaponLogic>();
-        ThrowableBase grenadeScript = weapon.GetComponent<ThrowableBase>();
+        Throwable grenadeScript = weapon.GetComponent<Throwable>();
         
         if (grenadeScript!=null && !weaponHandlerScript.CanAddGrenade(weapon))
         {

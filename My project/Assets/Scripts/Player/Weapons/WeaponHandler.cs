@@ -182,7 +182,7 @@ public class WeaponHandler : MonoBehaviour
 
         if (!GameController.gameRunning || !canRun || MenuManager.running) return;
 
-        weaponUseHold = Input.GetKeyDown(fireKey);
+        weaponUseHold = Input.GetKey(fireKey);
         weaponSecondaryUseHold = Input.GetMouseButton(1);
 
         if (Input.GetKeyDown(fireKey))
@@ -330,9 +330,9 @@ public class WeaponHandler : MonoBehaviour
     {
         if (throwables.Contains(currentHeld)) //handle grenade drop
         {
-            ThrowableBase grenadeScript = currentHeld.GetComponent<ThrowableBase>();
+            Throwable grenadeScript = currentHeld.GetComponent<Throwable>();
 
-            GameObject grenadeInstance = Instantiate(grenadeScript.droppedGrenadePrefab, raycastSource.position - new Vector3(0f, 0.5f, 0f), Quaternion.identity);
+            GameObject grenadeInstance = Instantiate(grenadeScript.dropPrefab, raycastSource.position - new Vector3(0f, 0.5f, 0f), Quaternion.identity);
             Rigidbody rb = grenadeInstance.GetComponent<Rigidbody>();
             grenadeInstance.SetActive(true);
 
@@ -507,17 +507,17 @@ public class WeaponHandler : MonoBehaviour
     public bool CanAddGrenade(GameObject grenade)
     {
         Throwable grenadeScript = grenade.GetComponent<Throwable>();
-        Dictionary<ThrowableBase.Type, int> grenadeDictionary = ReturnGrenadeTypeCount(); //Get dictionary with how many of each type is in the list
-        ThrowableBase.Type type = grenadeScript.type;
+        Dictionary<Throwable.Type, int> grenadeDictionary = ReturnGrenadeTypeCount(); //Get dictionary with how many of each type is in the list
+        Throwable.Type type = grenadeScript.type;
         int maxAllowed = 0;
 
         switch (type)
         {
-            case ThrowableBase.Type.Fire: maxAllowed = 1; break;
-            case ThrowableBase.Type.Smoke: maxAllowed = 1; break;
-            case ThrowableBase.Type.Flash: maxAllowed = 2; break;
-            case ThrowableBase.Type.HE: maxAllowed = 1; break;
-            case ThrowableBase.Type.Decoy: maxAllowed = 2; break;
+            case Throwable.Type.Fire: maxAllowed = 1; break;
+            case Throwable.Type.Smoke: maxAllowed = 1; break;
+            case Throwable.Type.Flash: maxAllowed = 2; break;
+            case Throwable.Type.HE: maxAllowed = 1; break;
+            case Throwable.Type.Decoy: maxAllowed = 2; break;
 
         }
         if (grenadeDictionary[grenadeScript.type] < maxAllowed)
@@ -525,22 +525,22 @@ public class WeaponHandler : MonoBehaviour
         else return false;
     }
 
-    private Dictionary<ThrowableBase.Type, int> ReturnGrenadeTypeCount()
+    private Dictionary<Throwable.Type, int> ReturnGrenadeTypeCount()
     {
         var grenadeList = GetAllGrenadesEnumerable();
-        Dictionary<ThrowableBase.Type, int> dictionary = new Dictionary<ThrowableBase.Type, int>()
+        Dictionary<Throwable.Type, int> dictionary = new Dictionary<Throwable.Type, int>()
         {
-            {ThrowableBase.Type.Fire,0},
-            {ThrowableBase.Type.Smoke,0},
-            {ThrowableBase.Type.Flash,0},
-            {ThrowableBase.Type.Decoy,0},
-            {ThrowableBase.Type.HE,0}
+            {Throwable.Type.Fire,0},
+            {Throwable.Type.Smoke,0},
+            {Throwable.Type.Flash,0},
+            {Throwable.Type.Decoy,0},
+            {Throwable.Type.HE,0}
         };  //make preset dictionary to add count to
 
 
         foreach (GameObject grenade in grenadeList)
         {
-            ThrowableBase.Type type = grenade.GetComponent<ThrowableBase>().type;
+            Throwable.Type type = grenade.GetComponent<Throwable>().type;
 
             dictionary[type] = dictionary[type] + 1;   //increment counter by 1
         }

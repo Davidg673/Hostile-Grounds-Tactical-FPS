@@ -369,10 +369,11 @@ public class GameController : MonoBehaviour
 
     void CheckWinCondition()
     {
+        //Debug.Log($"game running:{gameRunning} bots: {playWithBots} buy phase {buyPhase}");
         if (gameRunning == false || !playWithBots || buyPhase) return;
-
-
-        if (activeCT.Count == 0)
+    
+    
+        if (activeCT.Count <= 0)
         {
             gameRunning = false;
             AIRunning=false;
@@ -383,7 +384,7 @@ public class GameController : MonoBehaviour
             Invoke(nameof(EndRound), 5f);
 
         }
-        else if (activeT.Count == 0)
+        else if (activeT.Count <= 0)
         {
             gameRunning = false;
             AIRunning=false;

@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class GrenadeEffect : MonoBehaviour
 {
-    [SerializeField] public Type type;
+    [SerializeField] public Throwable.Type type;
     [SerializeField] private GameObject fireEffect;
     [SerializeField] private GameObject smokeEffect;
     [SerializeField] private GameObject HEEffect;
@@ -30,16 +30,6 @@ public class GrenadeEffect : MonoBehaviour
     [SerializeField] GameObject flashContainer;
 
 
-
-    public enum Type
-    {
-        Fire,
-        Smoke,
-        Flash,
-        HE,
-        Decoy
-    }
-
     [SerializeField] private float timerToExplode;
     void Start()
     {
@@ -53,11 +43,11 @@ public class GrenadeEffect : MonoBehaviour
     {
         switch (type)
         {
-            case Type.Fire: FireEffect(); break;
-            case Type.Smoke: SmokeEffect(); break;
-            case Type.Flash: CheckForTargetsFlash(radiusFlash); break;
-            case Type.HE: CheckForTargetsHE(radiusHE); break;
-            case Type.Decoy: PlayDecoySound(); break;
+            case Throwable.Type.Fire: FireEffect(); break;
+            case Throwable.Type.Smoke: SmokeEffect(); break;
+            case Throwable.Type.Flash: CheckForTargetsFlash(radiusFlash); break;
+            case Throwable.Type.HE: CheckForTargetsHE(radiusHE); break;
+            case Throwable.Type.Decoy: PlayDecoySound(); break;
 
         }
     }
