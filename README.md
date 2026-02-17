@@ -8,6 +8,11 @@ The goal of the project is to preserve core gameplay mechanics such as round-bas
 ## Academic Context
 Developed as a final-year dissertation project for a BSc (Hons) Computer Science degree.
 
+## 📁 Project Structure
+  Assets/
+  └── Scripts/        # Main gameplay and system scripts
+  └── Prefabs/
+  └── Scenes/
 
 ## Core Gameplay Systems
 - Round-based system that resets players and AI
