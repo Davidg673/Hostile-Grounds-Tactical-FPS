@@ -8,7 +8,8 @@ The goal of the project is to preserve core gameplay mechanics such as round-bas
 ## Academic Context
 Developed as a final-year dissertation project for a BSc (Hons) Computer Science degree.
 
-**Source Code:** Main gameplay and system scripts are located in `Assets/Scripts/`.
+## Source Code: 
+Main gameplay and system scripts are located in `Assets/Scripts/`.
 
 ## Core Gameplay Systems
 - Round-based system that resets players and AI
